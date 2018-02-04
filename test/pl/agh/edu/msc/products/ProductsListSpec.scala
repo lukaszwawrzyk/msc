@@ -1,13 +1,11 @@
 package pl.agh.edu.msc.products
 
-import org.scalatest._
-import org.scalatestplus.play._
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import pl.agh.edu.msc.common.IntegrationTest
 
-class ProductsListSpec extends FlatSpec with Matchers with GuiceOneAppPerSuite {
+class ProductsListSpec extends IntegrationTest {
 
-  private val productsService = app.injector.instanceOf[ProductService]
-  private val productsRepository = app.injector.instanceOf[ProductRepository]
+  private val productsService = inject[ProductService]
+  private val productsRepository = inject[ProductRepository]
 
   it should "paginate results" in {
     productsService should not be null
