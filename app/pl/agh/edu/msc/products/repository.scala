@@ -6,6 +6,16 @@ import pl.agh.edu.msc.common.infra.Id
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
+import scala.concurrent.{ ExecutionContext, Future }
+
+case class ProductSaveView(
+  name:                String,
+  cachedPrice:         BigDecimal,
+  photo:               Option[String],
+  cachedAverageRating: Option[Double],
+  description:         String
+)
+
 @Singleton
 class ProductRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
@@ -32,5 +42,20 @@ class ProductRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   }
 
   private val query = TableQuery[Products]
+  private val insertQuery = query returning query.map(_.id)
+
+
+  def list(
+    filter: Filter,
+    pagination: Pagination
+  )(implicit ec: ExecutionContext): Future[Paginated[ProductListView]] = {
+    Future.successful(Paginated(pagination, 10, Seq.empty))
+  }
+
+  def insert(product: ProductSaveView)(implicit ec: ExecutionContext): Future[ProductId] = db.run {
+    import product._
+    val insert = insertQuery += ProductRow(name, cachedPrice, photo, cachedAverageRating, description)
+    insert.map(id => ProductId(id.value))
+  }
 
 }

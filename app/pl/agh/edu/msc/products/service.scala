@@ -27,7 +27,7 @@ class ProductService @Inject() (productRepository: ProductRepository) {
     filter: Filter,
     pagination: Pagination
   )(implicit ec: ExecutionContext): Future[Paginated[ProductListView]] = {
-    ???
+    productRepository.list(filter, pagination)
   }
 
 }
