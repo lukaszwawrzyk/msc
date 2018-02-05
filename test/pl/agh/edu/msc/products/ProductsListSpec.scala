@@ -48,7 +48,7 @@ class ProductsListSpec extends IntegrationTest {
   }
 
   private def insertProduct(name: String, rating: Double) = {
-    val product = ProductSaveView(
+    val product = ProductRepoView(
       name,
       cachedPrice = Money(12),
       photo = None,

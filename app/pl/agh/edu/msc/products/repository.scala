@@ -10,7 +10,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-case class ProductSaveView(
+case class ProductRepoView(
   name:                String,
   cachedPrice:         Money,
   photo:               Option[URL],
@@ -18,8 +18,8 @@ case class ProductSaveView(
   description:         String
 )
 
-@Singleton
-class ProductRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
+
+@Singleton class ProductRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   import dbConfig._
   import profile.api._
@@ -45,6 +45,12 @@ class ProductRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
 
   private val baseQuery = TableQuery[Products]
   private val insertQuery = baseQuery returning baseQuery.map(_.id)
+
+  def find(id: ProductId): Future[ProductRepoView] = db.run {
+    baseQuery.filter(_.id === Id[ProductRow](id.value)).result.head.map { row =>
+      ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), row.description)
+    }
+  }
 
   def list(
     filtering:  Filtering,
@@ -75,7 +81,7 @@ class ProductRepository @Inject()(dbConfigProvider: DatabaseConfigProvider) {
     ProductListView(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
   }
 
-  def insert(product: ProductSaveView)(implicit ec: ExecutionContext): Future[ProductId] = db.run {
+  def insert(product: ProductRepoView)(implicit ec: ExecutionContext): Future[ProductId] = db.run {
     import product._
     val insert = insertQuery += ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description)
     insert.map(id => ProductId(id.value))
