@@ -6,6 +6,16 @@ create table "people" (
   "age" int not null
 );
 
+create table "products" (
+  "name" VARCHAR NOT NULL,
+  "cached_price" DECIMAL(21,2) NOT NULL,
+  "photo" VARCHAR,
+  "cached_average_rating" DOUBLE,
+  "description" VARCHAR NOT NULL,
+  "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT
+)
+
 # --- !Downs
 
-drop table "people" if exists;
+drop table "people";
+drop table "products";

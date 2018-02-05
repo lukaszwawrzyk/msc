@@ -14,6 +14,9 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "3.0.3",
   "com.typesafe.play" %% "play-slick-evolutions" % "3.0.3",
   "com.h2database" % "h2" % "1.4.196",
+  "org.typelevel" %% "cats-core" % "1.0.1",
   "org.scalatest" %% "scalatest" % "3.0.4" % Test,
   "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.0" % Test
 )
+
+scalacOptions += "-Ypartial-unification"
