@@ -5,6 +5,7 @@ import javax.inject.{ Inject, Singleton }
 
 import pl.agh.edu.msc.common.infra.Id
 import pl.agh.edu.msc.products.Filtering.PriceRange
+import pl.agh.edu.msc.review.Rating
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
@@ -46,7 +47,7 @@ case class ProductRepoView(
   private val baseQuery = TableQuery[Products]
   private val insertQuery = baseQuery returning baseQuery.map(_.id)
 
-  def find(id: ProductId): Future[ProductRepoView] = db.run {
+  def find(id: ProductId)(implicit ec: ExecutionContext): Future[ProductRepoView] = db.run {
     baseQuery.filter(_.id === Id[ProductRow](id.value)).result.head.map { row =>
       ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), row.description)
     }
@@ -56,7 +57,7 @@ case class ProductRepoView(
     filtering:  Filtering,
     pagination: Pagination,
     sorting:    Sorting
-  )(implicit ec: ExecutionContext): Future[Paginated[ProductListView]] = db.run {
+  )(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = db.run {
     val filteredQuery = baseQuery.filter { p =>
       filtering.minRating.map(minRating => p.cachedAverageRating >= minRating.value).getOrElse(LiteralColumn(true).?) &&
       filtering.text.map(text => (p.name.toLowerCase like s"%$text%") || (p.description.toLowerCase like s"%$text%")).getOrElse(LiteralColumn(true)) &&
@@ -78,7 +79,7 @@ case class ProductRepoView(
   }
 
   private def toListView(row: ProductRow) = {
-    ProductListView(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
+    ProductListItem(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
   }
 
   def insert(product: ProductRepoView)(implicit ec: ExecutionContext): Future[ProductId] = db.run {

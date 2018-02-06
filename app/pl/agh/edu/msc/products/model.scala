@@ -2,9 +2,11 @@ package pl.agh.edu.msc.products
 
 import java.net.URL
 
+import pl.agh.edu.msc.review.{ Rating, Review }
+
 case class ProductId(value: Long) extends AnyVal
 
-case class ProductListView(
+case class ProductListItem(
   name:          String,
   price:         Money,
   photo:         Option[URL],
@@ -12,24 +14,16 @@ case class ProductListView(
   id:            ProductId
 )
 
-case class ProductFullView(
+case class ProductDetails(
   name:          String,
   price:         Money,
   photo:         Option[URL],
   description:   String,
   averageRating: Option[Rating],
-  reviews:       Seq[ReviewView],
+  reviews:       Seq[Review],
   availability:  Option[Availability],
   id:            ProductId
 )
-
-case class ReviewView(
-  author:  String,
-  content: String,
-  rating:  Rating
-)
-
-case class Rating(value: Double) { require(value <= 5.0 && value >= 1) }
 
 case class Money(value: BigDecimal) extends AnyVal
 

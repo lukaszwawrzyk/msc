@@ -2,6 +2,7 @@ package pl.agh.edu.msc.products
 
 import pl.agh.edu.msc.common.IntegrationTest
 import cats.syntax.option._
+import pl.agh.edu.msc.review.Rating
 
 class ProductsListSpec extends IntegrationTest {
 
@@ -9,7 +10,6 @@ class ProductsListSpec extends IntegrationTest {
   private val productsRepository = inject[ProductRepository]
 
   it should "paginate filtered results" in {
-    println(productsRepository.createSchema)
     // GIVEN
     insertProduct(name = "a", rating = 4.1)
     insertProduct(name = "b", rating = 4.0)
@@ -35,7 +35,7 @@ class ProductsListSpec extends IntegrationTest {
     val page4 = page(4)
 
     // THEN
-    def checkPage(paginated: Paginated[ProductListView], page: Int, expectedProducts: String*) = {
+    def checkPage(paginated: Paginated[ProductListItem], page: Int, expectedProducts: String*) = {
       paginated.totalPages shouldBe 4
       paginated.pagination shouldBe Pagination(size = 2, page)
       paginated.data.map(_.name) shouldBe expectedProducts

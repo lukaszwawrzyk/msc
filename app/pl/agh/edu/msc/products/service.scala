@@ -5,7 +5,7 @@ import javax.inject.{ Inject, Singleton }
 import pl.agh.edu.msc.availability.AvailabilityService
 import pl.agh.edu.msc.pricing.PricingService
 import pl.agh.edu.msc.products.Filtering.PriceRange
-import pl.agh.edu.msc.review.ReviewService
+import pl.agh.edu.msc.review.{ Rating, ReviewService }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -34,17 +34,19 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
 
   def find(
     id: ProductId
-  )(implicit ec: ExecutionContext): Future[ProductFullView] = {
+  )(implicit ec: ExecutionContext): Future[ProductDetails] = {
     for {
       repoView <- productRepository.find(id)
+      rating <- reviewService.averageRating(id)
+      reviews <- reviewService.reviews(id)
     } yield {
-      ProductFullView(
+      ProductDetails(
         repoView.name,
         repoView.cachedPrice,
         repoView.photo,
         repoView.description,
-        repoView.cachedAverageRating,
-        reviews = Seq.empty,
+        rating.orElse(repoView.cachedAverageRating),
+        reviews = reviews,
         availability = None,
         id
       )
@@ -55,7 +57,7 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
     filtering:  Filtering,
     pagination: Pagination,
     sorting:    Sorting
-  )(implicit ec: ExecutionContext): Future[Paginated[ProductListView]] = {
+  )(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = {
     productRepository.list(filtering, pagination, sorting)
   }
 

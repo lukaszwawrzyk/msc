@@ -13,9 +13,19 @@ create table "products" (
   "cached_average_rating" DOUBLE,
   "description" VARCHAR NOT NULL,
   "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT
+);
+
+create table "reviews" (
+  "author" VARCHAR NOT NULL,
+  "content" VARCHAR NOT NULL,
+  "rating" DOUBLE,
+  "product_id" BIGINT NOT NULL,
+  "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  foreign key ("product_id") references "products"("id")
 )
 
 # --- !Downs
 
 drop table "people";
 drop table "products";
+drop table "reviews";
