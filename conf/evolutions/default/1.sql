@@ -22,6 +22,13 @@ create table "reviews" (
   "product_id" BIGINT NOT NULL,
   "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
   foreign key ("product_id") references "products"("id")
+);
+
+create table "prices" (
+  "product_id" BIGINT NOT NULL,
+  "price" DECIMAL(21,2) NOT NULL,
+  "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  foreign key ("product_id") references "products"("id")
 )
 
 # --- !Downs
@@ -29,3 +36,4 @@ create table "reviews" (
 drop table "people";
 drop table "products";
 drop table "reviews";
+drop table "prices";

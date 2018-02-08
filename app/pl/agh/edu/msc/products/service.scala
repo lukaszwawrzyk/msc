@@ -36,16 +36,17 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
     id: ProductId
   )(implicit ec: ExecutionContext): Future[ProductDetails] = {
     for {
-      repoView <- productRepository.find(id)
+      product <- productRepository.find(id)
       rating <- reviewService.averageRating(id)
       reviews <- reviewService.reviews(id)
+      price <- pricingService.find(id)
     } yield {
       ProductDetails(
-        repoView.name,
-        repoView.cachedPrice,
-        repoView.photo,
-        repoView.description,
-        rating.orElse(repoView.cachedAverageRating),
+        product.name,
+        price.getOrElse(product.cachedPrice),
+        product.photo,
+        product.description,
+        rating.orElse(product.cachedAverageRating),
         reviews = reviews,
         availability = None,
         id

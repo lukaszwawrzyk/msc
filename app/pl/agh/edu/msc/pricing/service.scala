@@ -1,5 +1,17 @@
 package pl.agh.edu.msc.pricing
 
-class PricingService {
+import javax.inject.{ Inject, Singleton}
+
+import pl.agh.edu.msc.products.{ Money, ProductId }
+import cats.syntax.option._
+
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.control.NonFatal
+
+@Singleton class PricingService @Inject() (priceRepository: PriceRepository) {
+
+  def find(id: ProductId)(implicit ec: ExecutionContext): Future[Option[Money]] = {
+    priceRepository.find(id).map(_.some).recover { case NonFatal(_) => None }
+  }
 
 }
