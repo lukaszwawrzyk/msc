@@ -4,6 +4,7 @@ import java.net.URL
 import javax.inject.{ Inject, Singleton }
 
 import pl.agh.edu.msc.common.infra.Id
+import pl.agh.edu.msc.pricing.Money
 import pl.agh.edu.msc.products.Filtering.PriceRange
 import pl.agh.edu.msc.review.Rating
 import play.api.db.slick.DatabaseConfigProvider

@@ -1,9 +1,9 @@
 package pl.agh.edu.msc.pricing
 
-import javax.inject.{ Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 
-import pl.agh.edu.msc.products.{ Money, ProductId }
 import cats.syntax.option._
+import pl.agh.edu.msc.products.ProductId
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal

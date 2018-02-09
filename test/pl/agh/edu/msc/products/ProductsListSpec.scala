@@ -2,6 +2,7 @@ package pl.agh.edu.msc.products
 
 import pl.agh.edu.msc.common.IntegrationTest
 import cats.syntax.option._
+import pl.agh.edu.msc.pricing.Money
 import pl.agh.edu.msc.review.Rating
 
 class ProductsListSpec extends IntegrationTest {

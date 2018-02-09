@@ -2,6 +2,8 @@ package pl.agh.edu.msc.products
 
 import java.net.URL
 
+import pl.agh.edu.msc.availability.Availability
+import pl.agh.edu.msc.pricing.Money
 import pl.agh.edu.msc.review.{ Rating, Review }
 
 case class ProductId(value: Long) extends AnyVal
@@ -24,7 +26,3 @@ case class ProductDetails(
   availability:  Option[Availability],
   id:            ProductId
 )
-
-case class Money(value: BigDecimal) extends AnyVal
-
-case class Availability(value: BigDecimal) extends AnyVal

@@ -3,7 +3,7 @@ package pl.agh.edu.msc.products
 import javax.inject.{ Inject, Singleton }
 
 import pl.agh.edu.msc.availability.AvailabilityService
-import pl.agh.edu.msc.pricing.PricingService
+import pl.agh.edu.msc.pricing.{ Money, PricingService }
 import pl.agh.edu.msc.products.Filtering.PriceRange
 import pl.agh.edu.msc.review.{ Rating, ReviewService }
 
@@ -40,6 +40,7 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
       rating <- reviewService.averageRating(id)
       reviews <- reviewService.reviews(id)
       price <- pricingService.find(id)
+      availability <- availabilityService.find(id)
     } yield {
       ProductDetails(
         product.name,
@@ -47,8 +48,8 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
         product.photo,
         product.description,
         rating.orElse(product.cachedAverageRating),
-        reviews = reviews,
-        availability = None,
+        reviews,
+        availability,
         id
       )
     }

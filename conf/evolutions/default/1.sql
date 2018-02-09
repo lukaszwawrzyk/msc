@@ -29,6 +29,14 @@ create table "prices" (
   "price" DECIMAL(21,2) NOT NULL,
   "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
   foreign key ("product_id") references "products"("id")
+);
+
+
+create table "availability" (
+  "product_id" BIGINT NOT NULL,
+  "stock" BIGINT NOT NULL,
+  "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  foreign key ("product_id") references "products"("id")
 )
 
 # --- !Downs
@@ -37,3 +45,4 @@ drop table "people";
 drop table "products";
 drop table "reviews";
 drop table "prices";
+drop table "availability";

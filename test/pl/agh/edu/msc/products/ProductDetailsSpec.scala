@@ -3,7 +3,8 @@ package pl.agh.edu.msc.products
 import pl.agh.edu.msc.common.IntegrationTest
 import pl.agh.edu.msc.review.{ Rating, Review, ReviewRepository }
 import cats.syntax.option._
-import pl.agh.edu.msc.pricing.PriceRepository
+import pl.agh.edu.msc.availability.{ Availability, AvailabilityRepository }
+import pl.agh.edu.msc.pricing.{ Money, PriceRepository }
 
 class ProductDetailsSpec extends IntegrationTest {
 
@@ -11,6 +12,7 @@ class ProductDetailsSpec extends IntegrationTest {
   private val productsRepository = inject[ProductRepository]
   private val reviewRepository = inject[ReviewRepository]
   private val priceRepository = inject[PriceRepository]
+  private val availabilityRepository = inject[AvailabilityRepository]
 
   it should "fetch detailed product view" in {
     // GIVEN
@@ -25,6 +27,7 @@ class ProductDetailsSpec extends IntegrationTest {
     reviewRepository.insert(id, Review("John", "cool",      Rating(5.0))).await()
     reviewRepository.insert(id, Review("Bob",  "I liked",   Rating(4.5))).await()
     priceRepository.save(id, Money(12)).await()
+    availabilityRepository.save(id, Availability(stock = 42))
 
     // WHEN
     val detailedProduct = productsService.find(id).await()
@@ -41,7 +44,7 @@ class ProductDetailsSpec extends IntegrationTest {
         Review("John", "cool",      Rating(5.0)),
         Review("Bob",  "I liked",   Rating(4.5))
       ),
-      availability = None,
+      availability = Availability(stock = 42).some,
       id = id
     )
   }
