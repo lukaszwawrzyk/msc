@@ -19,6 +19,7 @@ create table "reviews" (
   "author" VARCHAR NOT NULL,
   "content" VARCHAR NOT NULL,
   "rating" DOUBLE,
+  "date" TIMESTAMP,
   "product_id" BIGINT NOT NULL,
   "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
   foreign key ("product_id") references "products"("id")

@@ -1,5 +1,7 @@
 package pl.agh.edu.msc.review
 
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import javax.inject.{ Inject, Singleton }
 
 import pl.agh.edu.msc.common.infra.Id
@@ -15,10 +17,13 @@ import scala.concurrent.{ ExecutionContext, Future }
   import dbConfig._
   import profile.api._
 
+  private implicit val localDateTimeMapping = MappedColumnType.base[LocalDateTime, Timestamp](Timestamp.valueOf, _.toLocalDateTime)
+
   private case class ReviewRow(
     author:    String,
     content:   String,
     rating:    Double,
+    date:      LocalDateTime,
     productId: Long,
     id:        Id[ReviewRow] = Id(-1)
   )
@@ -27,9 +32,10 @@ import scala.concurrent.{ ExecutionContext, Future }
     def author = column[String]("author")
     def content = column[String]("content")
     def rating = column[Double]("rating")
+    def date = column[LocalDateTime]("date")
     def productId = column[Long]("product_id")
     def id = column[Id[ReviewRow]]("id", O.PrimaryKey, O.AutoInc)
-    def * = (author, content, rating, productId, id).mapTo[ReviewRow]
+    def * = (author, content, rating, date, productId, id).mapTo[ReviewRow]
   }
 
   private val baseQuery = TableQuery[Reviews]
@@ -47,16 +53,22 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   def find(product: ProductId)(implicit ec: ExecutionContext): Future[Seq[Review]] = db.run {
-    byIdQuery(product.value).result.map { rows =>
-      rows.map { row =>
-        Review(row.author, row.content, Rating(row.rating))
-      }
-    }
+    byIdQuery(product.value).result.map(convertRows)
+  }
+
+  def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[Review]] = db.run {
+    baseQuery.sortBy(_.date.desc).take(limit).result.map(convertRows)
   }
 
   def insert(product: ProductId, review: Review)(implicit ec: ExecutionContext): Future[Unit] = db.run {
     import review._
-    (baseQuery += ReviewRow(author, content, rating.value, product.value)).map(_ => ())
+    (baseQuery += ReviewRow(author, content, rating.value, date, product.value)).map(_ => ())
+  }
+
+  private def convertRows(rows: Seq[ReviewRow]) = {
+    rows.map { row =>
+      Review(row.author, row.content, Rating(row.rating), row.date)
+    }
   }
 
 }

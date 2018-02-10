@@ -38,7 +38,7 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
     for {
       product <- productRepository.find(id)
       rating <- reviewService.averageRating(id)
-      reviews <- reviewService.reviews(id)
+      reviews <- reviewService.find(id)
       price <- pricingService.find(id)
       availability <- availabilityService.find(id)
     } yield {

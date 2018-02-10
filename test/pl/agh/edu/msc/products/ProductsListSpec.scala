@@ -7,8 +7,9 @@ import pl.agh.edu.msc.review.Rating
 
 class ProductsListSpec extends IntegrationTest {
 
-  private val productsService = inject[ProductService]
-  private val productsRepository = inject[ProductRepository]
+  private val productsService = behaviorOf[ProductService]
+
+  private val productsRepository = withHelpOf[ProductRepository]
 
   it should "paginate filtered results" in {
     // GIVEN

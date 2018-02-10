@@ -20,3 +20,5 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions += "-Ypartial-unification"
+
+parallelExecution in Test := false
