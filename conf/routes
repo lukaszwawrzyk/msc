@@ -1,11 +1,11 @@
-# Routes
-# This file defines all application routes (Higher priority routes first)
-# ~~~~
+GET         /                                pl.edu.agh.msc.auth.controllers.ApplicationController.index
+GET         /signOut                         pl.edu.agh.msc.auth.controllers.ApplicationController.signOut
 
-# Home page
-GET     /                           controllers.PersonController.index
-POST    /person                     controllers.PersonController.addPerson
-GET     /persons                    controllers.PersonController.getPersons
+GET         /signUp                          pl.edu.agh.msc.auth.controllers.SignUpController.view
+POST        /signUp                          pl.edu.agh.msc.auth.controllers.SignUpController.submit
 
-# Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET         /signIn                          pl.edu.agh.msc.auth.controllers.SignInController.view
+POST        /signIn                          pl.edu.agh.msc.auth.controllers.SignInController.submit
+
+GET         /assets/*file                    controllers.Assets.versioned(file)
+->          /webjars                         webjars.Routes

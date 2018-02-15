@@ -1,4 +1,30 @@
-name = Name
-age = Age
+invalid.credentials = Invalid credentials!
+access.denied = Access denied!
+home.title = Silhouette - Home
+sign.up.title = Silhouette - Sign Up
+sign.in.title = Silhouette - Sign In
+toggle.navigation = Toggle navigation
+welcome.signed.in = Welcome, you are now signed in!
 
-user.created = You have successfully created a user!
+sign.up.account = Sign up for a new account
+sign.in.credentials = Sign in with your credentials
+
+error = Error!
+info = Info!
+success = Success!
+home = Home
+first.name = First name
+last.name = Last name
+full.name = Full name
+email = Email
+password = Password
+sign.up = Sign up
+sign.in = Sign in
+sign.out = Sign out
+sign.in.now = Sign in now
+sign.up.now = Sign up now
+already.a.member = Already a member?
+not.a.member = Not a member?
+remember.me = Remember my login on this computer
+sign.up.success = You can now log in
+facebook = Facebook
