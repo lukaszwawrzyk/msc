@@ -38,7 +38,13 @@ create table "availability" (
   "stock" BIGINT NOT NULL,
   "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
   foreign key ("product_id") references "products"("id")
-)
+);
+
+create table "auth_tokens" (
+  "user_id" VARCHAR(32) NOT NULL, -- references users
+  "expiry" TIMESTAMP NOT NULL ,
+  "id" VARCHAR(32) NOT NULL PRIMARY KEY
+);
 
 # --- !Downs
 
@@ -47,3 +53,4 @@ drop table "products";
 drop table "reviews";
 drop table "prices";
 drop table "availability";
+drop table "auth_tokens";

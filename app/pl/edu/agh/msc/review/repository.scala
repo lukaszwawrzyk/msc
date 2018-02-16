@@ -6,18 +6,17 @@ import javax.inject.{ Inject, Singleton }
 
 import pl.edu.agh.msc.common.infra.Id
 import pl.edu.agh.msc.products.ProductId
+import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-@Singleton class ReviewRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
-
+@Singleton class ReviewRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
-  import dbConfig._
+  protected val profile = dbConfig.profile
+  import dbConfig.db
   import profile.api._
-
-  private implicit val localDateTimeMapping = MappedColumnType.base[LocalDateTime, Timestamp](Timestamp.valueOf, _.toLocalDateTime)
 
   private case class ReviewRow(
     author:    String,

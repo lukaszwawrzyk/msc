@@ -33,11 +33,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
-  /**
-   * Configures the module.
-   */
-  def configure() {
-    bind[AuthTokenRepository].asEagerSingleton()
+  def configure(): Unit = {
     bind[UserRepository].asEagerSingleton()
     bind[AuthTokenService].asEagerSingleton()
     bind[UserService].asEagerSingleton()
@@ -65,7 +61,6 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
     authenticatorService: AuthenticatorService[CookieAuthenticator],
     eventBus:             EventBus
   ): Environment[DefaultEnv] = {
-
     Environment[DefaultEnv](
       userService,
       authenticatorService,
@@ -90,7 +85,6 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
   @Provides @Named("authenticator-crypter")
   def provideAuthenticatorCrypter(configuration: Configuration): Crypter = {
     val config = configuration.underlying.as[JcaCrypterSettings]("silhouette.authenticator.crypter")
-
     new JcaCrypter(config)
   }
 
@@ -111,7 +105,6 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
     configuration:                           Configuration,
     clock:                                   Clock
   ): AuthenticatorService[CookieAuthenticator] = {
-
     val config = configuration.underlying.as[CookieAuthenticatorSettings]("silhouette.authenticator")
     val authenticatorEncoder = new CrypterAuthenticatorEncoder(crypter)
 
@@ -138,7 +131,6 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
     authInfoRepository:     AuthInfoRepository,
     passwordHasherRegistry: PasswordHasherRegistry
   ): CredentialsProvider = {
-
     new CredentialsProvider(authInfoRepository, passwordHasherRegistry)
   }
 

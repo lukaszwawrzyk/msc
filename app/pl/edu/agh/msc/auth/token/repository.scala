@@ -1,35 +1,63 @@
 package pl.edu.agh.msc.auth.token
 
+import java.time.LocalDateTime
 import java.util.UUID
+import javax.inject.{ Inject, Singleton }
 
-import org.joda.time.DateTime
+import pl.edu.agh.msc.utils.SlickTypeMappings
+import play.api.db.slick.DatabaseConfigProvider
+import slick.jdbc.JdbcProfile
 
 import scala.collection.mutable
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
-class AuthTokenRepository {
+@Singleton class AuthTokenRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {
+  private val dbConfig = dbConfigProvider.get[JdbcProfile]
+  protected val profile = dbConfig.profile
+  import dbConfig.db
+  import profile.api._
 
-  private val tokens: mutable.HashMap[UUID, AuthToken] = mutable.HashMap()
+  private case class AuthTokenRow(
+    userId: UUID,
+    expiry: LocalDateTime,
+    id:     UUID,
+  )
 
-  def find(id: UUID): Future[Option[AuthToken]] = {
-    Future.successful(tokens.get(id))
+  private class AuthTokens(tag: Tag) extends Table[AuthTokenRow](tag, "auth_tokens") {
+    def userId = column[UUID]("user_id")
+    def expiry = column[LocalDateTime]("expiry")
+    def id = column[UUID]("id", O.PrimaryKey)
+    def * = (userId, expiry, id).mapTo[AuthTokenRow]
   }
 
-  def findExpired(dateTime: DateTime): Future[Seq[AuthToken]] = Future.successful {
-    tokens.filter {
-      case (_, token) =>
-        token.expiry.isBefore(dateTime)
-    }.values.toSeq
+  private val baseQuery = TableQuery[AuthTokens]
+
+  private val byIdQuery = Compiled { id: Rep[UUID] =>
+    baseQuery.filter(_.id === id)
   }
 
-  def save(token: AuthToken): Future[AuthToken] = {
-    tokens += (token.id -> token)
-    Future.successful(token)
+  private val byExpirationQuery = Compiled { expiresBefore: Rep[LocalDateTime] =>
+    baseQuery.filter(_.expiry < expiresBefore)
   }
 
-  def remove(id: UUID): Future[Unit] = {
-    tokens -= id
-    Future.successful(())
+  def find(id: UUID)(implicit ec: ExecutionContext): Future[Option[AuthToken]] = db.run {
+    byIdQuery(id).result.headOption.map(_.map(convertRow))
+  }
+
+  def findExpired(now: LocalDateTime)(implicit ec: ExecutionContext): Future[Seq[AuthToken]] = db.run {
+    byExpirationQuery(now).result.map(_.map(convertRow))
+  }
+
+  def save(token: AuthToken)(implicit ec: ExecutionContext): Future[AuthToken] = db.run {
+    (baseQuery += AuthTokenRow(token.userID, token.expiry, token.id)).map(_ => token)
+  }
+
+  def remove(id: UUID)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+    byIdQuery(id).delete.map(_ => ())
+  }
+
+  private def convertRow(row: AuthTokenRow) = {
+    AuthToken(row.id, row.userId, row.expiry)
   }
 
 }

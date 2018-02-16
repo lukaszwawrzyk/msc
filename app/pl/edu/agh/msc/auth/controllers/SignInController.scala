@@ -47,7 +47,7 @@ class SignInController @Inject() (
         val credentials = Credentials(data.email, data.password)
         for {
           loginInfo <- credentialsProvider.authenticate(credentials)
-          user: User <- userService.retrieve(loginInfo).map(_.getOrElse(throw new IdentityNotFoundException("Couldn't find user")))
+          user <- userService.retrieve(loginInfo).map(_.getOrElse(throw new IdentityNotFoundException("Couldn't find user")))
           authenticator <- silhouette.env.authenticatorService.create(loginInfo) map {
             case authenticator if data.rememberMe =>
               val c = configuration.underlying
