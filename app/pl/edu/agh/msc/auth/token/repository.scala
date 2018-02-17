@@ -8,7 +8,6 @@ import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
-import scala.collection.mutable
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class AuthTokenRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {

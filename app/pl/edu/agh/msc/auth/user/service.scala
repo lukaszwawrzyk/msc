@@ -13,6 +13,6 @@ class UserService @Inject() (
 
   def retrieve(loginInfo: LoginInfo): Future[Option[User]] = userRepository.find(loginInfo)
 
-  def save(user: User) = userRepository.save(user)
+  def save(user: User): Future[User] = userRepository.save(user)
 
 }

@@ -47,19 +47,17 @@ class SignUpController @Inject() (
             Future.successful(Redirect(routes.SignInController.view()).flashing("error" -> "User with this email already exists"))
           case None =>
             val user = User(
-              userID    = UUID.randomUUID(),
+              id        = UUID.randomUUID(),
               loginInfo = loginInfo,
               firstName = Some(data.firstName),
               lastName  = Some(data.lastName),
-              fullName  = Some(data.firstName + " " + data.lastName),
-              email     = Some(data.email),
-              activated = true
+              email     = Some(data.email)
             )
             for {
               savedUser <- userService.save(user)
               hashedPassword = passwordHasherRegistry.current.hash(data.password)
               _ <- authInfoRepository.add(loginInfo, hashedPassword)
-              _ <- authTokenService.create(savedUser.userID)
+              _ <- authTokenService.create(savedUser.id)
               _ <- Future.successful(silhouette.env.eventBus.publish(SignUpEvent(savedUser, request)))
             } yield {
               Redirect(routes.SignInController.view()).flashing("info" -> Messages("sign.up.success"))
