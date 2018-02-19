@@ -8,5 +8,5 @@ case class Cart(
 
 case class CartItem(
   product: ProductId,
-  amount: Int
+  amount:  Int
 )

@@ -11,7 +11,7 @@ trait ReviewFactories {
     content: String        = "nice",
     rating:  Int           = 4,
     date:    LocalDateTime = LocalDateTime.of(2018, 2, 7, 12, 30)
-  ) = {
+  ): Review = {
     Review(author, content, Rating(rating.toDouble), date)
   }
 

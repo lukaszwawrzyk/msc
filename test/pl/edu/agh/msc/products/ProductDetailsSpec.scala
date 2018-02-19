@@ -29,7 +29,7 @@ class ProductDetailsSpec extends IntegrationTest with ReviewFactories {
     reviewRepository.insert(id, createReview("John", "cool", rating = 5)).await()
     reviewRepository.insert(id, createReview("Bob", "I liked", rating = 3)).await()
     priceRepository.save(id, Money(12)).await()
-    availabilityRepository.save(id, Availability(stock = 42))
+    availabilityRepository.save(id, Availability(stock = 42)).await()
 
     // WHEN
     val detailedProduct = productsService.find(id).await()

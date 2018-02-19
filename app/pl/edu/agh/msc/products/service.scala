@@ -2,6 +2,8 @@ package pl.edu.agh.msc.products
 
 import javax.inject.{ Inject, Singleton }
 
+import cats.data.OptionT
+import cats.instances.future._
 import pl.edu.agh.msc.availability.AvailabilityService
 import pl.edu.agh.msc.pricing.{ Money, PricingService }
 import pl.edu.agh.msc.products.Filtering.PriceRange
@@ -53,6 +55,10 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
         id
       )
     }
+  }
+
+  def price(id: ProductId)(implicit ec: ExecutionContext): Future[Money] = {
+    OptionT(pricingService.find(id)).getOrElseF(productRepository.find(id).map(_.cachedPrice))
   }
 
   def list(
