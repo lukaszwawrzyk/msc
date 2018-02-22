@@ -52,6 +52,7 @@ create table "auth_tokens" (
 
 create table "orders" (
   "status" INT NOT NULL,
+  "user_id" VARCHAR(32) NOT NULL,
   "date" TIMESTAMP NOT NULL,
   "full_name" VARCHAR NOT NULL,
   "street_address" VARCHAR NOT NULL,
@@ -59,6 +60,7 @@ create table "orders" (
   "city" VARCHAR NOT NULL,
   "country" VARCHAR NOT NULL,
   "id" VARCHAR(32) NOT NULL PRIMARY KEY,
+  FOREIGN KEY ("user_id") REFERENCES "users"("id")
 );
 
 create table "line_items" (

@@ -14,7 +14,7 @@ import scala.concurrent.{ ExecutionContext, Future }
   time:             Time
 ) {
 
-  def saveDraft(orderDraft: OrderDraft)(implicit ec: ExecutionContext): Future[OrderId] = {
+  def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[OrderId] = {
     for {
       items <- Future.traverse(orderDraft.cart.items) { cartItem =>
         productService.price(cartItem.product).map { price =>
@@ -24,6 +24,7 @@ import scala.concurrent.{ ExecutionContext, Future }
       id = OrderId(UUID.randomUUID())
       order = Order(
         id,
+        buyer   = user,
         address = orderDraft.address,
         status  = OrderStatus.Unconfirmed,
         items,
@@ -38,11 +39,11 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   def confirm(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    ???
+    ordersRepository.changeStatus(id, OrderStatus.Confirmed)
   }
 
   def historical(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = {
-    ???
+    ordersRepository.findByUser(user)
   }
 
   def paymentConfirmed(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {

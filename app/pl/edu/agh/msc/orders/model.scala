@@ -16,6 +16,7 @@ case class OrderDraft(
 
 case class Order(
   id:      OrderId,
+  buyer:   UUID,
   address: Address,
   status:  OrderStatus.Value,
   items:   Seq[LineItem],

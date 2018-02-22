@@ -20,6 +20,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   private case class OrderRow(
     status:        Int,
+    buyerId:       UUID,
     date:          LocalDateTime,
     fullName:      String,
     streetAddress: String,
@@ -31,6 +32,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   private class Orders(tag: Tag) extends Table[OrderRow](tag, "orders") {
     def status = column[Int]("status")
+    def userId = column[UUID]("user_id")
     def date = column[LocalDateTime]("date")
     def fullName = column[String]("full_name")
     def streetAddress = column[String]("street_address")
@@ -38,7 +40,7 @@ import scala.concurrent.{ ExecutionContext, Future }
     def city = column[String]("city")
     def country = column[String]("country")
     def id = column[UUID]("id", O.PrimaryKey)
-    def * = (status, date, fullName, streetAddress, zipCode, city, country, id).mapTo[OrderRow]
+    def * = (status, userId, date, fullName, streetAddress, zipCode, city, country, id).mapTo[OrderRow]
   }
 
   private case class LineItemRow(
@@ -63,36 +65,35 @@ import scala.concurrent.{ ExecutionContext, Future }
   private val orderByIdQuery = Compiled { id: Rep[UUID] =>
     baseOrderQuery.filter(_.id === id)
   }
+  private val orderStatusByIdQuery = Compiled { id: Rep[UUID] =>
+    baseOrderQuery.filter(_.id === id).map(_.status)
+  }
+  private val orderByUserQuery = Compiled { userId: Rep[UUID] =>
+    baseOrderQuery.filter(_.userId === userId).sortBy(_.date.desc)
+  }
   private val lineItemsByOrderQuery = Compiled { orderId: Rep[UUID] =>
     baseLineItemsQuery.filter(_.orderId === orderId)
   }
 
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = db.run {
+    orderByIdQuery(id.value).result.head.flatMap(convertRow)
+  }
+
+  def findByUser(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = db.run {
     for {
-      orderRow: OrderRow <- orderByIdQuery(id.value).result.head
-      lineItemRows: Seq[LineItemRow] <- lineItemsByOrderQuery(id.value).result
-    } yield {
-      Order(
-        OrderId(orderRow.id),
-        Address(
-          orderRow.fullName,
-          orderRow.streetAddress,
-          orderRow.zipCode,
-          orderRow.city,
-          orderRow.country
-        ),
-        OrderStatus.apply(orderRow.status),
-        lineItemRows.map { itemRow =>
-          LineItem(ProductId(itemRow.productId), itemRow.amount, Money(itemRow.price))
-        },
-        orderRow.date
-      )
-    }
+      orderRows <- orderByUserQuery(user).result
+      orders <- DBIO.sequence(orderRows.map(convertRow))
+    } yield orders
+  }
+
+  def changeStatus(id: OrderId, status: OrderStatus.Value)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+    orderStatusByIdQuery(id.value).update(status.id).map(_ => ())
   }
 
   def insert(order: Order)(implicit ec: ExecutionContext): Future[Unit] = db.run {
     val orderRow = OrderRow(
       order.status.id,
+      order.buyer,
       order.date,
       order.address.fullName,
       order.address.streetAddress,
@@ -108,6 +109,33 @@ import scala.concurrent.{ ExecutionContext, Future }
     (baseOrderQuery += orderRow) >>
       DBIO.sequence(lineItemRows.map(baseLineItemsQuery += _)) >>
       DBIO.successful(())
+  }
+
+  private def convertRow(orderRow: OrderRow)(implicit ec: ExecutionContext): DBIO[Order] = {
+    for {
+      lineItemRows: Seq[LineItemRow] <- lineItemsByOrderQuery(orderRow.id).result
+    } yield {
+      val address = Address(
+        orderRow.fullName,
+        orderRow.streetAddress,
+        orderRow.zipCode,
+        orderRow.city,
+        orderRow.country
+      )
+
+      val lineItems = lineItemRows.map { itemRow =>
+        LineItem(ProductId(itemRow.productId), itemRow.amount, Money(itemRow.price))
+      }
+
+      Order(
+        OrderId(orderRow.id),
+        orderRow.buyerId,
+        address,
+        OrderStatus(orderRow.status),
+        lineItems,
+        orderRow.date
+      )
+    }
   }
 
 }
