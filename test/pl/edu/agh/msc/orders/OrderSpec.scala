@@ -51,7 +51,7 @@ class OrderSpec extends IntegrationTest with ProductFactories {
     order.date shouldBe currentTime
   }
 
-  private val currentTime = LocalDateTime.now()
+  private lazy val currentTime = LocalDateTime.now()
 
   override def fakeApplication(): Application = new GuiceApplicationBuilder().overrides(bind[Time].toInstance(new StubTime(currentTime))).build()
 
