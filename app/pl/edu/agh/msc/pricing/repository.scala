@@ -38,7 +38,10 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   def save(product: ProductId, price: Money)(implicit ec: ExecutionContext): Future[Unit] = db.run {
-    byIdQuery(product.value).delete >> (baseQuery += PriceRow(product.value, price.value)) >> DBIO.successful(())
+    DBIO.seq(
+      byIdQuery(product.value).delete,
+      baseQuery += PriceRow(product.value, price.value)
+    ).transactionally
   }
 
 }

@@ -47,7 +47,7 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   def paymentConfirmed(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    ???
+    ordersRepository.changeStatus(id, OrderStatus.Paid)
   }
 
 }

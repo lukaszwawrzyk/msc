@@ -118,6 +118,25 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
     }
   }
 
+  it should "confirm the payment" in {
+    // GIVEN
+    val john = createAndSaveUser().await()
+    val laptop = createProduct(name  = "Laptop", price = Money(2200)).await()
+    val draft = OrderDraft(
+      Cart(Seq(CartItem(laptop, amount = 2))),
+      createAddress()
+    )
+
+    // WHEN
+    val id = ordersService.saveDraft(draft, john).await()
+    ordersService.confirm(id).await()
+    ordersService.paymentConfirmed(id).await()
+    val order = ordersService.find(id).await()
+
+    // THEN
+    order.status shouldBe OrderStatus.Paid
+  }
+
   private lazy val currentTime = LocalDateTime.now()
   private val march = LocalDateTime.of(2018, Month.MARCH, 10, 23, 30)
   private val june = march.withMonth(Month.JUNE.getValue)

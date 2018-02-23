@@ -31,7 +31,7 @@ case class ProductRepoView(
     photo:               Option[String],
     cachedAverageRating: Option[Double],
     description:         String,
-    id:                  Id[ProductRow] = Id(-1)
+    id:                  Long           = -1
   )
 
   private class Products(tag: Tag) extends Table[ProductRow](tag, "products") {
@@ -40,15 +40,18 @@ case class ProductRepoView(
     def photo = column[Option[String]]("photo")
     def cachedAverageRating = column[Option[Double]]("cached_average_rating")
     def description = column[String]("description")
-    def id = column[Id[ProductRow]]("id", O.PrimaryKey, O.AutoInc)
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def * = (name, cachedPrice, photo, cachedAverageRating, description, id).mapTo[ProductRow]
   }
 
   private val baseQuery = TableQuery[Products]
   private val insertQuery = baseQuery returning baseQuery.map(_.id)
+  private val byIdQuery = Compiled { id: Rep[Long] =>
+    baseQuery.filter(_.id === id)
+  }
 
   def find(id: ProductId)(implicit ec: ExecutionContext): Future[ProductRepoView] = db.run {
-    baseQuery.filter(_.id === Id[ProductRow](id.value)).result.head.map { row =>
+    byIdQuery(id.value).result.head.map { row =>
       ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), row.description)
     }
   }
