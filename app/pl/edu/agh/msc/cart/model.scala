@@ -6,6 +6,10 @@ case class Cart(
   items: Seq[CartItem]
 )
 
+object Cart {
+  val Empty = Cart(Seq.empty)
+}
+
 case class CartItem(
   product: ProductId,
   amount:  Int

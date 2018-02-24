@@ -3,6 +3,7 @@ package pl.edu.agh.msc.orders
 import java.util.UUID
 import javax.inject.{ Inject, Singleton }
 
+import pl.edu.agh.msc.cart.CartService
 import pl.edu.agh.msc.products.ProductService
 import pl.edu.agh.msc.utils.Time
 
@@ -11,6 +12,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 @Singleton class OrdersService @Inject() (
   ordersRepository: OrdersRepository,
   productService:   ProductService,
+  cartService:      CartService,
   time:             Time
 ) {
 
@@ -31,6 +33,7 @@ import scala.concurrent.{ ExecutionContext, Future }
         date = time.now()
       )
       _ <- ordersRepository.insert(order)
+      _ <- cartService.clear(user)
     } yield id
   }
 

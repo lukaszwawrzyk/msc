@@ -73,8 +73,18 @@ create table "line_items" (
   foreign key ("order_id") references "orders"("id")
 );
 
+create table "cart_items" (
+  "product_id" BIGINT NOT NULL,
+  "amount" BIGINT NOT NULL,
+  "user_id" VARCHAR(32) NOT NULL,
+  "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  foreign key ("product_id") references "products"("id"),
+  foreign key ("user_id") REFERENCES "users"("id")
+);
+
 # --- !Downs
 
+drop table "cart_items";
 drop table "line_items";
 drop table "orders";
 drop table "auth_tokens";

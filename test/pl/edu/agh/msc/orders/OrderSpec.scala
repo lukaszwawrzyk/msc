@@ -1,23 +1,17 @@
 package pl.edu.agh.msc.orders
 
 import java.time.{ LocalDateTime, Month }
-import java.util.UUID
 
-import com.mohiva.play.silhouette.api.LoginInfo
-import com.mohiva.play.silhouette.impl.providers.CredentialsProvider
-import pl.edu.agh.msc.auth.user.{ User, UserService }
+import org.scalatest.{ Inside, LoneElement }
 import pl.edu.agh.msc.cart.{ Cart, CartItem }
 import pl.edu.agh.msc.common.IntegrationTest
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.ProductFactories
+import pl.edu.agh.msc.user.UserFactories
 import pl.edu.agh.msc.utils.Time
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import cats.syntax.option._
-import org.scalatest.{ Inside, LoneElement }
-
-import scala.concurrent.Future
 
 class OrderSpec extends IntegrationTest with Inside with LoneElement with ProductFactories with OrderFactories with UserFactories {
 
@@ -148,23 +142,5 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
   }
 
   override def fakeApplication(): Application = new GuiceApplicationBuilder().overrides(bind[Time].toInstance(time)).build()
-
-}
-
-trait UserFactories { this: IntegrationTest =>
-
-  private val userService = inject[UserService]
-
-  def createAndSaveUser(): Future[UUID] = {
-    val id = UUID.randomUUID()
-    val user = User(
-      id,
-      LoginInfo(CredentialsProvider.ID, "a@b.com"),
-      "John".some,
-      "Doe".some,
-      "a@b.com".some
-    )
-    userService.save(user).map(_.id)
-  }
 
 }
