@@ -19,10 +19,10 @@ class PaymentSpec extends IntegrationTest with OrderFactories {
     // GIVEN
     val paymentRequest = PaymentRequest(
       totalPrice = Money(10000),
-      email = "john.doe@mail.com",
-      buyer = createAddress(),
-      products = Seq(Product("a smartphone", unitPrice = Money(1000), amount = 10)),
-      returnUrl = new URL("http://msc.com/order/123/payment/confirm")
+      email      = "john.doe@mail.com",
+      buyer      = createAddress(),
+      products   = Seq(Product("a smartphone", unitPrice = Money(1000), amount = 10)),
+      returnUrl  = new URL("http://msc.com/order/123/payment/confirm")
     )
 
     // WHEN

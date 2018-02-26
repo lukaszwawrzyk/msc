@@ -18,10 +18,10 @@ trait NotificationService {
     Future(PaymentId(UUID.randomUUID()))
   }
 
-  private[payment] def get(id: PaymentId): Future[PaymentRequest] = ???
+  private[payment] def get(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = ???
 
-  private[payment] def pay(id: PaymentId): Future[Unit] = ???
+  private[payment] def pay(id: PaymentId)(implicit ec: ExecutionContext): Future[Unit] = ???
 
-  def isPaid(id: PaymentId): Future[Boolean] = Future(false)
+  def isPaid(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = Future(false)
 
 }

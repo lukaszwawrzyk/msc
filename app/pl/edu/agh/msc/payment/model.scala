@@ -10,10 +10,10 @@ case class PaymentId(value: UUID) extends AnyVal
 
 case class PaymentRequest(
   totalPrice: Money,
-  email: String,
-  buyer: Address,
-  products: Seq[Product],
-  returnUrl: URL
+  email:      String,
+  buyer:      Address,
+  products:   Seq[Product],
+  returnUrl:  URL
 )
 
 case class Product(name: String, unitPrice: Money, amount: Int)
