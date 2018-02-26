@@ -8,7 +8,7 @@ import pl.edu.agh.msc.pricing.Money
 
 case class PaymentId(value: UUID) extends AnyVal
 
-case class Payment(
+case class PaymentRequest(
   totalPrice: Money,
   email: String,
   buyer: Address,
