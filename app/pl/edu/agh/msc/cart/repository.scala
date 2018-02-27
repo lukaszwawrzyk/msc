@@ -3,8 +3,6 @@ package pl.edu.agh.msc.cart
 import java.util.UUID
 import javax.inject.{ Inject, Singleton }
 
-import pl.edu.agh.msc.availability.Availability
-import pl.edu.agh.msc.common.infra.Id
 import pl.edu.agh.msc.products.ProductId
 import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider

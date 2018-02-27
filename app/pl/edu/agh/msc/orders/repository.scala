@@ -106,9 +106,10 @@ import scala.concurrent.{ ExecutionContext, Future }
       LineItemRow(order.id.value, item.product.value, item.amount, item.price.value)
     }
 
-    (baseOrderQuery += orderRow) >>
-      DBIO.sequence(lineItemRows.map(baseLineItemsQuery += _)) >>
-      DBIO.successful(())
+    DBIO.seq(
+      baseOrderQuery += orderRow,
+      baseLineItemsQuery ++= lineItemRows
+    )
   }
 
   private def convertRow(orderRow: OrderRow)(implicit ec: ExecutionContext): DBIO[Order] = {

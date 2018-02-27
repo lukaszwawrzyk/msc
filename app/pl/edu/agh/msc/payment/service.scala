@@ -11,17 +11,29 @@ trait NotificationService {
 }
 
 @Singleton class PaymentService @Inject() (
-  notificationService: NotificationService
+  notificationService: NotificationService,
+  paymentRepository:   PaymentRepository
 ) {
 
   def create(payment: PaymentRequest)(implicit ec: ExecutionContext): Future[PaymentId] = {
-    Future(PaymentId(UUID.randomUUID()))
+    val id = PaymentId(UUID.randomUUID())
+    paymentRepository.insert(id, payment).map(_ => id)
   }
 
-  private[payment] def get(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = ???
+  private[payment] def get(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = {
+    paymentRepository.find(id)
+  }
 
-  private[payment] def pay(id: PaymentId)(implicit ec: ExecutionContext): Future[Unit] = ???
+  private[payment] def pay(id: PaymentId)(implicit ec: ExecutionContext): Future[Unit] = {
+    for {
+      _ <- paymentRepository.setPaymentStatus(id, isPaid = true)
+      payment <- paymentRepository.find(id)
+      _ <- notificationService.notifyURL(payment.returnUrl)
+    } yield ()
+  }
 
-  def isPaid(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = Future(false)
+  def isPaid(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = {
+    paymentRepository.getPaymentStatus(id)
+  }
 
 }
