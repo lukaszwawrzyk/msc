@@ -82,8 +82,29 @@ create table "cart_items" (
   foreign key ("user_id") REFERENCES "users"("id")
 );
 
+create table "payments" (
+  "total_price" DECIMAL(21,2) NOT NULL,
+  "email" VARCHAR NOT NULL,
+  "address" VARCHAR NOT NULL,
+  "return_url" VARCHAR NOT NULL,
+  "is_paid" BOOLEAN NOT NULL,
+  "id" VARCHAR(32) NOT NULL PRIMARY KEY
+);
+
+
+create table "payment_products" (
+  "name" VARCHAR NOT NULL,
+  "unit_price" DECIMAL(21,2) NOT NULL,
+  "amount" BIGINT NOT NULL,
+  "payment_id" VARCHAR(32) NOT NULL,
+  "id" BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  FOREIGN KEY ("payment_id") REFERENCES "payments"("id")
+);
+
 # --- !Downs
 
+drop table "payment_products";
+drop table "payments";
 drop table "cart_items";
 drop table "line_items";
 drop table "orders";

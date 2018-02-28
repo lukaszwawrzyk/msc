@@ -40,14 +40,14 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   private case class ProductRow(
-    name: String,
+    name:      String,
     unitPrice: BigDecimal,
-    amount: Int,
+    amount:    Int,
     paymentId: UUID,
-    id: Long = 0L
+    id:        Long       = 0L
   )
 
-  private class Products(tag: Tag) extends Table[ProductRow](tag, "products") {
+  private class Products(tag: Tag) extends Table[ProductRow](tag, "payment_products") {
     def name = column[String]("name")
     def unitPrice = column[BigDecimal]("unit_price")
     def amount = column[Int]("amount")
@@ -58,6 +58,15 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   private val basePaymentQuery = TableQuery[Payments]
   private val baseProductsQuery = TableQuery[Products]
+  private val paymentByIdQuery = Compiled { id: Rep[UUID] =>
+    basePaymentQuery.filter(_.id === id)
+  }
+  private val paymentStatusByIdQuery = Compiled { id: Rep[UUID] =>
+    basePaymentQuery.filter(_.id === id).map(_.isPaid)
+  }
+  private val productsByPaymentQuery = Compiled { paymentId: Rep[UUID] =>
+    baseProductsQuery.filter(_.paymentId === paymentId)
+  }
 
   def insert(id: PaymentId, payment: PaymentRequest)(implicit ec: ExecutionContext): Future[Unit] = db.run {
     val address = payment.address.productIterator.asInstanceOf[Iterator[String]].mkString(";")
@@ -79,16 +88,34 @@ import scala.concurrent.{ ExecutionContext, Future }
     )
   }
 
-  def find(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = {
-    Future(PaymentRequest(Money(1), "", Address("", "", "", "", ""), Seq.empty, null))
+  def find(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = db.run {
+    for {
+      paymentRow: PaymentRow <- paymentByIdQuery(id.value).result.head
+      productRows: Seq[ProductRow] <- productsByPaymentQuery(id.value).result
+    } yield {
+      val address = paymentRow.address.split(";").toSeq match {
+        case Seq(fullName, streetAddress, zipCode, city, country) =>
+          Address(fullName, streetAddress, zipCode, city, country)
+      }
+      val products = productRows.map { row =>
+        Product(row.name, Money(row.unitPrice), row.amount)
+      }
+      PaymentRequest(
+        Money(paymentRow.totalPrice),
+        paymentRow.email,
+        address,
+        products,
+        new URL(paymentRow.returnUrl)
+      )
+    }
   }
 
-  def getPaymentStatus(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = {
-    Future(true)
+  def getPaymentStatus(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = db.run {
+    paymentStatusByIdQuery(id.value).result.head
   }
 
-  def setPaymentStatus(id: PaymentId, isPaid: Boolean)(implicit ec: ExecutionContext): Future[Unit] = {
-    Future.unit
+  def setPaymentStatus(id: PaymentId, isPaid: Boolean)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+    DBIO.seq(paymentStatusByIdQuery(id.value).update(isPaid))
   }
 
 }

@@ -20,7 +20,7 @@ class PaymentSpec extends IntegrationTest with OrderFactories {
     val paymentRequest = PaymentRequest(
       totalPrice = Money(10000),
       email      = "john.doe@mail.com",
-      address      = createAddress(),
+      address    = createAddress(),
       products   = Seq(Product("a smartphone", unitPrice = Money(1000), amount = 10)),
       returnUrl  = new URL("http://msc.com/order/123/payment/confirm")
     )
@@ -30,7 +30,7 @@ class PaymentSpec extends IntegrationTest with OrderFactories {
     val storedRequest = paymentService.get(id).await()
     val isUnpaidBeforePaying = paymentService.isPaid(id).await()
     paymentService.pay(id).await()
-    val isPaidAfterPaying = paymentService.isPaid(id)
+    val isPaidAfterPaying = paymentService.isPaid(id).await()
 
     // THEN
     storedRequest shouldEqual paymentRequest
