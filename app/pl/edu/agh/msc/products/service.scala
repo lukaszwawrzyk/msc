@@ -12,6 +12,9 @@ import pl.edu.agh.msc.review.{ Rating, ReviewService }
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class Sorting(byNameAsc: Boolean)
+object Sorting {
+  val Default = Sorting(byNameAsc = true)
+}
 
 case class Filtering(
   text:       Option[String]     = None,
@@ -64,7 +67,7 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
   def list(
     filtering:  Filtering,
     pagination: Pagination,
-    sorting:    Sorting
+    sorting:    Sorting = Sorting.Default
   )(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = {
     productRepository.list(filtering, pagination, sorting)
   }
