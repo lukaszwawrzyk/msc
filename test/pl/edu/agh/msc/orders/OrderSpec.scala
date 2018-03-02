@@ -20,7 +20,7 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
   it should "create order draft with assigned prices" in {
     // GIVEN
     val john = createAndSaveUser().await()
-    val laptop = createProduct(name  = "Laptop", price = Money(2200)).await()
+    val laptop = createAndSaveProduct(name  = "Laptop", price = Money(2200)).await()
     val draft = OrderDraft(
       Cart(Seq(CartItem(laptop, amount = 2))),
       Address(
@@ -53,7 +53,7 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
   it should "confirm order" in {
     // GIVEN
     val john = createAndSaveUser().await()
-    val laptop = createProduct(name  = "Laptop", price = Money(2200)).await()
+    val laptop = createAndSaveProduct(name  = "Laptop", price = Money(2200)).await()
     val draft = OrderDraft(
       Cart(Seq(CartItem(laptop, amount = 2))),
       createAddress()
@@ -74,8 +74,8 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
   it should "return list of historical orders" in {
     // GIVEN
     val john = createAndSaveUser().await()
-    val laptop = createProduct(name  = "Laptop", price = Money(2200)).await()
-    val tablet = createProduct(name  = "Tablet", price = Money(800)).await()
+    val laptop = createAndSaveProduct(name  = "Laptop", price = Money(2200)).await()
+    val tablet = createAndSaveProduct(name  = "Tablet", price = Money(800)).await()
     val address = createAddress()
 
     val laptopOrder = OrderDraft(
@@ -115,7 +115,7 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
   it should "confirm the payment" in {
     // GIVEN
     val john = createAndSaveUser().await()
-    val laptop = createProduct(name  = "Laptop", price = Money(2200)).await()
+    val laptop = createAndSaveProduct(name  = "Laptop", price = Money(2200)).await()
     val draft = OrderDraft(
       Cart(Seq(CartItem(laptop, amount = 2))),
       createAddress()

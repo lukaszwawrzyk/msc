@@ -21,6 +21,7 @@ case class ProductRepoView(
 )
 
 @Singleton class ProductRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
+
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   import dbConfig._
   import profile.api._
@@ -83,6 +84,11 @@ case class ProductRepoView(
 
   private def toListView(row: ProductRow) = {
     ProductListItem(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
+  }
+
+  def update(id: ProductId, product: ProductRepoView)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+    import product._
+    DBIO.seq(byIdQuery(id.value).update(ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description, id.value)))
   }
 
   def insert(product: ProductRepoView)(implicit ec: ExecutionContext): Future[ProductId] = db.run {

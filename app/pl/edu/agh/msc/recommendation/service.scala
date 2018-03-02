@@ -13,7 +13,7 @@ import scala.util.Random
 
 @Singleton class RecommendationService @Inject() (
   productService: ProductService,
-  ordersService: OrdersService
+  ordersService:  OrdersService
 ) {
 
   private val MaxWords = 4
@@ -21,15 +21,14 @@ import scala.util.Random
   private val MaxRecentProducts = 5
   private val MinRating = Rating(4)
 
+  private implicit val ratingOrdering: Ordering[Rating] = Ordering.by(_.value)
+
   def forProduct(productId: ProductId)(implicit ec: ExecutionContext): Future[Seq[ProductListItem]] = {
     for {
       product <- productService.find(productId)
       words = wordsInName(product).take(MaxWords)
-      recommended <- Future.traverse(words)(word => productService.list(Filtering(text = word.some, minRating = MinRating.some), Pagination(size = MaxRecommendations, page = 1)))
-      backup <- productService.list(Filtering(), Pagination(size = MaxRecommendations, page = 1))
-    } yield {
-      (recommended.flatMap(_.data).sortBy(_.averageRating).reverse ++ backup.data).take(MaxRecommendations)
-    }
+      recommendations <- forWords(words)
+    } yield recommendations
   }
 
   def forUser(userId: UUID)(implicit ec: ExecutionContext): Future[Seq[ProductListItem]] = {
@@ -58,18 +57,19 @@ import scala.util.Random
     }
   }
 
-
   private def findSimilarProducts(word: String)(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = {
-    val filtering = Filtering(text = word.some, minRating = MinRating.some)
-    val firstPage = Pagination(size = MaxRecommendations, page = 1)
+    val filtering = Filtering(text      = word.some, minRating = MinRating.some)
     productService.list(filtering, firstPage)
   }
 
   private def findDefaultProducts(implicit ec: ExecutionContext) = {
-    productService.list(Filtering(minRating = MinRating.some), Pagination(size = MaxRecommendations, page = 1))
+    productService.list(Filtering(minRating = MinRating.some), firstPage)
   }
 
   private def wordsInName(product: ProductDetails) = {
     product.name.split(" ").toSeq
   }
+
+  private val firstPage = Pagination(size = MaxRecommendations, page = 1)
+
 }

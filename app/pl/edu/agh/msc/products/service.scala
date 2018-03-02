@@ -46,6 +46,7 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
       reviews <- reviewService.find(id)
       price <- pricingService.find(id)
       availability <- availabilityService.find(id)
+      _ <- updateCachedData(id, product, rating, price)
     } yield {
       ProductDetails(
         product.name,
@@ -67,9 +68,24 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
   def list(
     filtering:  Filtering,
     pagination: Pagination,
-    sorting:    Sorting = Sorting.Default
+    sorting:    Sorting    = Sorting.Default
   )(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = {
     productRepository.list(filtering, pagination, sorting)
+  }
+
+  private def updateCachedData(
+    id:      ProductId,
+    product: ProductRepoView,
+    rating:  Option[Rating],
+    price:   Option[Money]
+  )(implicit ec: ExecutionContext) = {
+    if (rating != product.cachedAverageRating || price.exists(_ != product.cachedPrice)) {
+      val updatedProduct = product.copy(
+        cachedAverageRating = rating,
+        cachedPrice         = price.getOrElse(product.cachedPrice)
+      )
+      productRepository.update(id, updatedProduct)
+    } else Future.unit
   }
 
 }

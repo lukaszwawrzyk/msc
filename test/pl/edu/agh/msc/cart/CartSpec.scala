@@ -15,8 +15,8 @@ class CartSpec extends IntegrationTest with ProductFactories with UserFactories 
   it should "handle the default order scenario" in {
     // GIVEN
     val client = createAndSaveUser().await()
-    val kettle = createProduct("Kettle", Money(10)).await()
-    val pot = createProduct("Pot", Money(15)).await()
+    val kettle = createAndSaveProduct("Kettle", Money(10)).await()
+    val pot = createAndSaveProduct("Pot", Money(15)).await()
 
     // WHEN
     cartService.add(client, kettle, amount = 1).await()
