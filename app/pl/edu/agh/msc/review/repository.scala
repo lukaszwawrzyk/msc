@@ -3,8 +3,6 @@ package pl.edu.agh.msc.review
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.inject.{ Inject, Singleton }
-
-import pl.edu.agh.msc.common.infra.Id
 import pl.edu.agh.msc.products.ProductId
 import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
@@ -24,7 +22,7 @@ import scala.concurrent.{ ExecutionContext, Future }
     rating:    Double,
     date:      LocalDateTime,
     productId: Long,
-    id:        Id[ReviewRow] = Id(-1)
+    id:        Long          = -1
   )
 
   private class Reviews(tag: Tag) extends Table[ReviewRow](tag, "reviews") {
@@ -33,7 +31,7 @@ import scala.concurrent.{ ExecutionContext, Future }
     def rating = column[Double]("rating")
     def date = column[LocalDateTime]("date")
     def productId = column[Long]("product_id")
-    def id = column[Id[ReviewRow]]("id", O.PrimaryKey, O.AutoInc)
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def * = (author, content, rating, date, productId, id).mapTo[ReviewRow]
   }
 
@@ -43,7 +41,7 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseQuery.filter(_.productId === product).map(_.rating).avg
   }
 
-  private val byIdQuery = Compiled { product: Rep[Long] =>
+  private val byProductQuery = Compiled { product: Rep[Long] =>
     baseQuery.filter(_.productId === product)
   }
 
@@ -52,7 +50,7 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   def find(product: ProductId)(implicit ec: ExecutionContext): Future[Seq[Review]] = db.run {
-    byIdQuery(product.value).result.map(convertRows)
+    byProductQuery(product.value).result.map(convertRows)
   }
 
   def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[Review]] = db.run {

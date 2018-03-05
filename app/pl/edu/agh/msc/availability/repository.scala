@@ -1,8 +1,6 @@
 package pl.edu.agh.msc.availability
 
 import javax.inject.{ Inject, Singleton }
-
-import pl.edu.agh.msc.common.infra.Id
 import pl.edu.agh.msc.products.ProductId
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
@@ -17,29 +15,29 @@ import scala.concurrent.{ ExecutionContext, Future }
   private case class AvailabilityRow(
     productId: Long,
     stock:     Long,
-    id:        Id[AvailabilityRow] = Id(-1)
+    id:        Long = -1
   )
 
   private class AvailabilityTable(tag: Tag) extends Table[AvailabilityRow](tag, "availability") {
     def productId = column[Long]("product_id")
     def stock = column[Long]("stock")
-    def id = column[Id[AvailabilityRow]]("id", O.PrimaryKey, O.AutoInc)
+    def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
     def * = (productId, stock, id).mapTo[AvailabilityRow]
   }
 
   private val baseQuery = TableQuery[AvailabilityTable]
 
-  private val byIdQuery = Compiled { productId: Rep[Long] =>
+  private val byProductQuery = Compiled { productId: Rep[Long] =>
     baseQuery.filter(_.productId === productId)
   }
 
   def find(product: ProductId)(implicit ec: ExecutionContext): Future[Option[Availability]] = db.run {
-    byIdQuery(product.value).result.headOption.map(row => row.map(row => Availability(row.stock)))
+    byProductQuery(product.value).result.headOption.map(row => row.map(row => Availability(row.stock)))
   }
 
   def save(product: ProductId, availability: Availability)(implicit ec: ExecutionContext): Future[Unit] = db.run {
     DBIO.seq(
-      byIdQuery(product.value).delete,
+      byProductQuery(product.value).delete,
       baseQuery += AvailabilityRow(product.value, availability.stock)
     ).transactionally
   }

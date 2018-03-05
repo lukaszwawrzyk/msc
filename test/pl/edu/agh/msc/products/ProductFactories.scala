@@ -2,7 +2,7 @@ package pl.edu.agh.msc.products
 
 import pl.edu.agh.msc.common.IntegrationTest
 import pl.edu.agh.msc.pricing.{ Money, PriceRepository }
-import pl.edu.agh.msc.review.{ Rating, ReviewRepository }
+import pl.edu.agh.msc.review.ReviewRepository
 import pl.edu.agh.msc.reviews.ReviewFactories
 
 import scala.concurrent.Future

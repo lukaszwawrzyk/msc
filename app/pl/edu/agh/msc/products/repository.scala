@@ -2,8 +2,6 @@ package pl.edu.agh.msc.products
 
 import java.net.URL
 import javax.inject.{ Inject, Singleton }
-
-import pl.edu.agh.msc.common.infra.Id
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.review.Rating
