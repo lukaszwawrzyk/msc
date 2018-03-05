@@ -12,7 +12,7 @@ import scala.concurrent.{ ExecutionContext, Future }
     reviewRepository.find(id)
   }
 
-  def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[Review]] = {
+  def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[(Review, ProductId)]] = {
     reviewRepository.latest(limit)
   }
 

@@ -1,4 +1,6 @@
+# auth
 GET         /                                pl.edu.agh.msc.auth.controllers.ApplicationController.index
+GET         /profile                         pl.edu.agh.msc.auth.controllers.ApplicationController.profile
 GET         /signOut                         pl.edu.agh.msc.auth.controllers.ApplicationController.signOut
 
 GET         /signUp                          pl.edu.agh.msc.auth.controllers.SignUpController.view
@@ -7,5 +9,10 @@ POST        /signUp                          pl.edu.agh.msc.auth.controllers.Sig
 GET         /signIn                          pl.edu.agh.msc.auth.controllers.SignInController.view
 POST        /signIn                          pl.edu.agh.msc.auth.controllers.SignInController.submit
 
+# products
+GET         /products                        pl.edu.agh.msc.ui.controllers.ProductController.list
+GET         /products                        pl.edu.agh.msc.ui.controllers.LandingPageController.view
+
+# common
 GET         /assets/*file                    controllers.Assets.versioned(file)
 ->          /webjars                         webjars.Routes

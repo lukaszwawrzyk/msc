@@ -59,7 +59,7 @@ case class ProductRepoView(
     filtering:  Filtering,
     pagination: Pagination,
     sorting:    Sorting
-  )(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = db.run {
+  )(implicit ec: ExecutionContext): Future[Paginated[ProductShort]] = db.run {
     val filteredQuery = baseQuery.filter { p =>
       filtering.minRating.map(minRating => p.cachedAverageRating >= minRating.value).getOrElse(LiteralColumn(true).?) &&
         filtering.text.map(text => (p.name.toLowerCase like s"%$text%") || (p.description.toLowerCase like s"%$text%")).getOrElse(LiteralColumn(true)) &&
@@ -81,7 +81,7 @@ case class ProductRepoView(
   }
 
   private def toListView(row: ProductRow) = {
-    ProductListItem(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
+    ProductShort(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
   }
 
   def update(id: ProductId, product: ProductRepoView)(implicit ec: ExecutionContext): Future[Unit] = db.run {

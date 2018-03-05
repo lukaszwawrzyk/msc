@@ -29,7 +29,7 @@ trait ProductFactories extends ReviewFactories { this: IntegrationTest =>
       ))
       _ <- pricesRepository.save(id, price)
       _ <- reviewRepository.insert(id, createReview(rating = rating))
-      _ <- productService.find(id) // triggers cache update
+      _ <- productService.findDetailed(id) // triggers cache update
     } yield id
   }
 

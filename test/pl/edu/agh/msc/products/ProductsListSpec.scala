@@ -37,7 +37,7 @@ class ProductsListSpec extends IntegrationTest {
     val page4 = page(4)
 
     // THEN
-    def checkPage(paginated: Paginated[ProductListItem], page: Int, expectedProducts: String*) = {
+    def checkPage(paginated: Paginated[ProductShort], page: Int, expectedProducts: String*) = {
       paginated.totalPages shouldBe 4
       paginated.pagination shouldBe Pagination(size = 2, page)
       paginated.data.map(_.name) shouldBe expectedProducts

@@ -23,15 +23,19 @@ import scala.util.Random
 
   private implicit val ratingOrdering: Ordering[Rating] = Ordering.by(_.value)
 
-  def forProduct(productId: ProductId)(implicit ec: ExecutionContext): Future[Seq[ProductListItem]] = {
+  def default()(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
+    findDefaultProducts.map(_.data)
+  }
+
+  def forProduct(productId: ProductId)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
     for {
-      product <- productService.find(productId)
+      product <- productService.findDetailed(productId)
       words = wordsInName(product).take(MaxWords)
       recommendations <- forWords(words)
     } yield recommendations
   }
 
-  def forUser(userId: UUID)(implicit ec: ExecutionContext): Future[Seq[ProductListItem]] = {
+  def forUser(userId: UUID)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
     for {
       recentProducts <- recentlyOrdered(userId)
       allWords = recentProducts.flatMap(wordsInName)
@@ -44,11 +48,11 @@ import scala.util.Random
     for {
       orders <- ordersService.historical(userId)
       recentProductIds = orders.flatMap(_.items).map(_.product).take(MaxRecentProducts)
-      recentProducts <- Future.traverse(recentProductIds)(productService.find)
+      recentProducts <- Future.traverse(recentProductIds)(productService.findDetailed)
     } yield recentProducts
   }
 
-  private def forWords(words: Seq[String])(implicit ec: ExecutionContext): Future[Seq[ProductListItem]] = {
+  private def forWords(words: Seq[String])(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
     for {
       recommended <- Future.traverse(words)(findSimilarProducts)
       backup <- findDefaultProducts
@@ -57,7 +61,7 @@ import scala.util.Random
     }
   }
 
-  private def findSimilarProducts(word: String)(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = {
+  private def findSimilarProducts(word: String)(implicit ec: ExecutionContext): Future[Paginated[ProductShort]] = {
     val filtering = Filtering(text      = word.some, minRating = MinRating.some)
     productService.list(filtering, firstPage)
   }

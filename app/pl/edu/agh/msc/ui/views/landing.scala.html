@@ -1,0 +1,14 @@
+@import _root_.controllers.AssetsFinder
+@import pl.edu.agh.msc.auth.user.User
+@import pl.edu.agh.msc.auth.views.html.main
+@import org.webjars.play.WebJarsUtil
+@import play.api.i18n.Messages
+@import play.api.mvc.RequestHeader
+@import pl.edu.agh.msc.products.ProductShort
+@import pl.edu.agh.msc.review.Review
+
+@(recommendedProducts: Seq[ProductShort], reviews: Seq[(Review, ProductShort)])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+
+@main("Simple Shop - Main Page", user) {
+
+}

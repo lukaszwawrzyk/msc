@@ -47,9 +47,9 @@ class ReviewsSpec extends IntegrationTest with ReviewFactories {
 
     // THEN
     reviews shouldBe Seq(
-      createReview(author = "e", date = at(14, 20)),
-      createReview(author = "d", date = at(13, 30)),
-      createReview(author = "c", date = at(12, 10))
+      createReview(author = "e", date = at(14, 20)) -> product,
+      createReview(author = "d", date = at(13, 30)) -> product,
+      createReview(author = "c", date = at(12, 10)) -> product
     )
   }
 

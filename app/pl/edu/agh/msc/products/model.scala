@@ -8,7 +8,7 @@ import pl.edu.agh.msc.review.{ Rating, Review }
 
 case class ProductId(value: Long) extends AnyVal
 
-case class ProductListItem(
+case class ProductShort(
   name:          String,
   price:         Money,
   photo:         Option[URL],

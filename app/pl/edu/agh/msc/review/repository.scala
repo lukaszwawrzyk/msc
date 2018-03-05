@@ -50,11 +50,11 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   def find(product: ProductId)(implicit ec: ExecutionContext): Future[Seq[Review]] = db.run {
-    byProductQuery(product.value).result.map(convertRows)
+    byProductQuery(product.value).result.map(convertRows((_, r) => r))
   }
 
-  def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[Review]] = db.run {
-    baseQuery.sortBy(_.date.desc).take(limit).result.map(convertRows)
+  def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[(Review, ProductId)]] = db.run {
+    baseQuery.sortBy(_.date.desc).take(limit).result.map(convertRows(((row, r) => r -> ProductId(row.productId))))
   }
 
   def insert(product: ProductId, review: Review)(implicit ec: ExecutionContext): Future[Unit] = db.run {
@@ -62,9 +62,10 @@ import scala.concurrent.{ ExecutionContext, Future }
     (baseQuery += ReviewRow(author, content, rating.value, date, product.value)).map(_ => ())
   }
 
-  private def convertRows(rows: Seq[ReviewRow]) = {
+  private def convertRows[A](transform: (ReviewRow, Review) => A)(rows: Seq[ReviewRow]): Seq[A] = {
     rows.map { row =>
-      Review(row.author, row.content, Rating(row.rating), row.date)
+      val review = Review(row.author, row.content, Rating(row.rating), row.date)
+      transform(row, review)
     }
   }
 

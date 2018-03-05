@@ -1,5 +1,6 @@
 package pl.edu.agh.msc.products
 
+import java.net.URL
 import javax.inject.{ Inject, Singleton }
 
 import cats.data.OptionT
@@ -37,7 +38,7 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
   pricingService:      PricingService
 ) {
 
-  def find(
+  def findDetailed(
     id: ProductId
   )(implicit ec: ExecutionContext): Future[ProductDetails] = {
     for {
@@ -61,6 +62,22 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
     }
   }
 
+  def findShort(
+    id: ProductId
+  )(implicit ec: ExecutionContext): Future[ProductShort] = {
+    for {
+      product <- productRepository.find(id)
+    } yield {
+      ProductShort(
+        product.name,
+        product.cachedPrice,
+        product.photo,
+        product.cachedAverageRating,
+        id
+      )
+    }
+  }
+
   def price(id: ProductId)(implicit ec: ExecutionContext): Future[Money] = {
     OptionT(pricingService.find(id)).getOrElseF(productRepository.find(id).map(_.cachedPrice))
   }
@@ -69,7 +86,7 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
     filtering:  Filtering,
     pagination: Pagination,
     sorting:    Sorting    = Sorting.Default
-  )(implicit ec: ExecutionContext): Future[Paginated[ProductListItem]] = {
+  )(implicit ec: ExecutionContext): Future[Paginated[ProductShort]] = {
     productRepository.list(filtering, pagination, sorting)
   }
 

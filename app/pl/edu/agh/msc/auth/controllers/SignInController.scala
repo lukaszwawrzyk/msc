@@ -36,8 +36,8 @@ class SignInController @Inject() (
   ex:          ExecutionContext
 ) extends AbstractController(components) with I18nSupport {
 
-  def view = silhouette.UnsecuredAction.async { implicit request: Request[AnyContent] =>
-    Future.successful(Ok(views.html.signIn(SignInForm.form)))
+  def view = silhouette.UnsecuredAction { implicit request =>
+    Ok(views.html.signIn(SignInForm.form))
   }
 
   def submit = silhouette.UnsecuredAction.async { implicit request: Request[AnyContent] =>
