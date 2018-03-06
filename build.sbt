@@ -48,6 +48,8 @@ libraryDependencies ++= Seq(
   "com.h2database"         %  "h2"                              % "1.4.196",
   "org.typelevel"          %% "cats-core"                       % "1.0.1",
 
+  "com.github.javafaker"   %  "javafaker"                       % "0.14",
+
   "org.scalatest"          %% "scalatest"                       % "3.0.4" % Test,
   "org.scalatestplus.play" %% "scalatestplus-play"              % "3.1.0" % Test
 )

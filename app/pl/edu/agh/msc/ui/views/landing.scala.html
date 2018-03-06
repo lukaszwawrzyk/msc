@@ -6,9 +6,34 @@
 @import play.api.mvc.RequestHeader
 @import pl.edu.agh.msc.products.ProductShort
 @import pl.edu.agh.msc.review.Review
+@import pl.edu.agh.msc.review.Rating
 
 @(recommendedProducts: Seq[ProductShort], reviews: Seq[(Review, ProductShort)])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main("Simple Shop - Main Page", user) {
+
+    <h1>Recommended products</h1>
+    <table>
+        @for(product <- recommendedProducts) {
+          <td>
+              <ul>
+                  <li><img src="@product.photo.getOrElse("")"></li>
+                  <li>@product.name</li>
+                  <li>$@product.price.value.toString</li>
+                  <li>
+                      @product.averageRating match {
+                          case None => { }
+                          case Some(Rating(rating)) => {
+                              <div class="my-tooltip">
+                                  @{(1 to rating.toInt).map(_ => "⭐").mkString}
+                                  <span class="tooltiptext">@rating.formatted("%.1f")</span>
+                              </div>
+                          }
+                      }
+                  </li>
+              </ul>
+          </td>
+        }
+    </table>
 
 }
