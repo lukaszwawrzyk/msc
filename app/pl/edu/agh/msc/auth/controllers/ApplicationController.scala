@@ -19,8 +19,8 @@ class ApplicationController @Inject() (
   assets:      AssetsFinder
 ) extends AbstractController(components) with I18nSupport {
 
-  def index = silhouette.SecuredAction { implicit request =>
-    Redirect(pl.edu.agh.msc.ui.controllers.routes.LandingPageController.view)
+  def index = silhouette.UserAwareAction { implicit request =>
+    Redirect(pl.edu.agh.msc.ui.controllers.routes.LandingPageController.view())
   }
 
   def profile = silhouette.SecuredAction { implicit request =>

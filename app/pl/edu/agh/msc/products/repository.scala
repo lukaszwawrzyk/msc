@@ -1,6 +1,5 @@
 package pl.edu.agh.msc.products
 
-import java.net.URL
 import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.Filtering.PriceRange
@@ -13,7 +12,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 case class ProductRepoView(
   name:                String,
   cachedPrice:         Money,
-  photo:               Option[URL],
+  photo:               Option[String],
   cachedAverageRating: Option[Rating],
   description:         String
 )
@@ -51,7 +50,7 @@ case class ProductRepoView(
 
   def find(id: ProductId)(implicit ec: ExecutionContext): Future[ProductRepoView] = db.run {
     byIdQuery(id.value).result.head.map { row =>
-      ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), row.description)
+      ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new String(_)), row.cachedAverageRating.map(Rating(_)), row.description)
     }
   }
 
@@ -81,7 +80,7 @@ case class ProductRepoView(
   }
 
   private def toListView(row: ProductRow) = {
-    ProductShort(row.name, Money(row.cachedPrice), row.photo.map(new URL(_)), row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
+    ProductShort(row.name, Money(row.cachedPrice), row.photo, row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
   }
 
   def update(id: ProductId, product: ProductRepoView)(implicit ec: ExecutionContext): Future[Unit] = db.run {

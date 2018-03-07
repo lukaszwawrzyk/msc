@@ -6,7 +6,7 @@ import _root_.controllers.AssetsFinder
 import com.mohiva.play.silhouette.api.Silhouette
 import org.webjars.play.WebJarsUtil
 import pl.edu.agh.msc.auth.infra.DefaultEnv
-import pl.edu.agh.msc.products.ProductService
+import pl.edu.agh.msc.products.{ ProductId, ProductService }
 import play.api.i18n.I18nSupport
 import play.api.mvc.{ AbstractController, ControllerComponents }
 
@@ -22,8 +22,12 @@ class ProductController @Inject() (
   assets:      AssetsFinder
 ) extends AbstractController(components) with I18nSupport {
 
-  def list = silhouette.SecuredAction.async { implicit request =>
+  def list = silhouette.UserAwareAction.async { implicit request =>
     Future.successful(Ok( /*views.html.home(request.identity)*/ ""))
+  }
+
+  def details(id: ProductId) = silhouette.UserAwareAction.async { implicit request =>
+    Future.successful(Ok(id.toString))
   }
 
 }

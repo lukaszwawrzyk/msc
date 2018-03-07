@@ -13,6 +13,7 @@ POST        /signIn                          pl.edu.agh.msc.auth.controllers.Sig
 GET         /landing                         pl.edu.agh.msc.ui.controllers.LandingPageController.view
 # products
 GET         /products                        pl.edu.agh.msc.ui.controllers.ProductController.list
+GET         /products/:id                    pl.edu.agh.msc.ui.controllers.ProductController.details(id: ProductId)
 
 # common
 GET         /assets/*file                    controllers.Assets.versioned(file)

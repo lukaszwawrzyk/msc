@@ -1,6 +1,7 @@
 @import _root_.controllers.AssetsFinder
 @import pl.edu.agh.msc.auth.user.User
 @import pl.edu.agh.msc.auth.views.html.main
+@import pl.edu.agh.msc.ui.controllers.routes
 @import org.webjars.play.WebJarsUtil
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
@@ -17,15 +18,15 @@
         @for(product <- recommendedProducts) {
           <td>
               <ul>
-                  <li><img src="@product.photo.getOrElse("")"></li>
-                  <li>@product.name</li>
+                  <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                  <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
                   <li>$@product.price.value.toString</li>
                   <li>
                       @product.averageRating match {
                           case None => { }
                           case Some(Rating(rating)) => {
                               <div class="my-tooltip">
-                                  @{(1 to rating.toInt).map(_ => "⭐").mkString}
+                                  @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
                                   <span class="tooltiptext">@rating.formatted("%.1f")</span>
                               </div>
                           }

@@ -109,3 +109,7 @@ a {
 .my-tooltip:hover .tooltiptext {
     visibility: visible;
 }
+
+ul {
+    list-style:none;
+}

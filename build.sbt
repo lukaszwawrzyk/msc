@@ -59,7 +59,10 @@ libraryDependencies ++= Seq(
 enablePlugins(PlayScala)
 
 routesGenerator := InjectedRoutesGenerator
-routesImport += "pl.edu.agh.msc.utils.Binders._"
+routesImport ++= Seq(
+  "pl.edu.agh.msc.utils.Binders._",
+  "pl.edu.agh.msc.products.ProductId"
+)
 TwirlKeys.templateImports := Seq()
 
 parallelExecution in Test := false

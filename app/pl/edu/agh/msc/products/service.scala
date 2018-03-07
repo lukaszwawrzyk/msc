@@ -1,6 +1,5 @@
 package pl.edu.agh.msc.products
 
-import java.net.URL
 import javax.inject.{ Inject, Singleton }
 
 import cats.data.OptionT
@@ -49,10 +48,13 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
       availability <- availabilityService.find(id)
       _ <- updateCachedData(id, product, rating, price)
     } yield {
+      val photo = product.photo.map { p =>
+        p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
+      }
       ProductDetails(
         product.name,
         price.getOrElse(product.cachedPrice),
-        product.photo,
+        photo,
         product.description,
         rating.orElse(product.cachedAverageRating),
         reviews,

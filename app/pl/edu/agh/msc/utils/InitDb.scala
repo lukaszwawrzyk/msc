@@ -1,11 +1,12 @@
 package pl.edu.agh.msc.utils
 
 import java.time.{ LocalDateTime, ZoneId }
-import java.util.{ Date, Locale }
 import java.util.concurrent.TimeUnit
+import java.util.{ Date, Locale, Random }
 import javax.inject.Inject
 
 import com.github.javafaker.Faker
+import controllers.AssetsFinder
 import pl.edu.agh.msc.pricing.{ Money, PriceRepository }
 import pl.edu.agh.msc.products.{ ProductId, ProductRepoView, ProductRepository, ProductService }
 import pl.edu.agh.msc.review.{ Rating, Review, ReviewRepository }
@@ -18,24 +19,30 @@ class InitDb @Inject() (
   productService:     ProductService,
   productsRepository: ProductRepository,
   pricesRepository:   PriceRepository,
-  reviewRepository:   ReviewRepository
+  reviewRepository:   ReviewRepository,
+  assetsFinder:       AssetsFinder
 )(implicit ec: ExecutionContext) {
 
   Locale.setDefault(Locale.ENGLISH)
 
-  private val faker = new Faker
+  private val faker = new Faker(new Random())
 
   println("Initializing data")
-  Future.traverse(1 to 200)(_ => createAndSaveProduct()).foreach(_ => println("Initialized"))
+  Future.traverse(1 to 1000)(_ => createAndSaveProduct()).foreach(_ => println("Initialized"))
 
   private def createAndSaveProduct(): Future[ProductId] = {
-    val name = s"[${faker.resolve("commerce.department")}] ${faker.commerce.productName()}"
+    val category = faker.resolve("commerce.department")
+    val name = faker.commerce.productName()
     val price = Money(BigDecimal(faker.commerce.price()))
+    val photo = {
+      val i = faker.random.nextInt(4) + 1
+      assetsFinder.path(s"images/p_$i.jpg")
+    }
     for {
       id <- productsRepository.insert(ProductRepoView(
         name,
         Money(0),
-        photo               = None,
+        photo               = Some(photo),
         cachedAverageRating = None,
         description         = ""
       ))
