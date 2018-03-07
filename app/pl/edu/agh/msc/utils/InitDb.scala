@@ -33,7 +33,7 @@ class InitDb @Inject() (
   private def createAndSaveProduct(): Future[ProductId] = {
     val category = faker.resolve("commerce.department")
     val name = faker.commerce.productName()
-    val price = Money(BigDecimal(faker.commerce.price()))
+    val price = Money(BigDecimal(faker.commerce.price(1, 2000)))
     val photo = {
       val i = faker.random.nextInt(4) + 1
       assetsFinder.path(s"images/p_$i.jpg")
@@ -54,8 +54,8 @@ class InitDb @Inject() (
 
   private def createReview(): Review = {
     val author = faker.name.fullName()
-    val content = faker.lorem.sentences(faker.random().nextInt(2) + 1).asScala.mkString(" ")
-    val rating = sample(Map(1 -> 0.08, 2 -> 0.02, 3 -> 0.2, 4 -> 0.35, 5 -> 0.35))
+    val content = faker.lorem.sentences(faker.random().nextInt(10) + 1).asScala.mkString(" ")
+    val rating = sample(Map(1 -> 0.08, 2 -> 0.02, 3 -> 0.2, 4 -> 0.25, 5 -> 0.45))
     val date = faker.date.past(1000, TimeUnit.DAYS)
 
     Review(author, content, Rating(rating.toDouble), date)

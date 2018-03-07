@@ -8,12 +8,13 @@
 @import pl.edu.agh.msc.products.ProductShort
 @import pl.edu.agh.msc.review.Review
 @import pl.edu.agh.msc.review.Rating
+@import java.time.format.{ DateTimeFormatter, FormatStyle }
 
 @(recommendedProducts: Seq[ProductShort], reviews: Seq[(Review, ProductShort)])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main("Simple Shop - Main Page", user) {
 
-    <h1>Recommended products</h1>
+    <h1>Recommended Products</h1>
     <table>
         @for(product <- recommendedProducts) {
           <td>
@@ -36,5 +37,26 @@
           </td>
         }
     </table>
+
+    <h1>Latest Reviews</h1>
+    @for((review, product) <- reviews) {
+        <table>
+            <td>
+                <ul>
+                    <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                    <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
+                    <li>$@product.price.value.toString</li>
+                </ul>
+            </td>
+            <td>
+                <p>
+                    <span style="font-weight: bold;">@review.author,</span>
+                    <span style="font-weight: lighter;">@review.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))</span>
+                    @{(1 to review.rating.value.toInt).map(_ => "⭐").mkString}
+                </p>
+                <p>@review.content</p>
+            </td>
+        </table>
+    }
 
 }
