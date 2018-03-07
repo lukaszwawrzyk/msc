@@ -16,47 +16,51 @@
 
     <h1>Recommended Products</h1>
     <table>
-        @for(product <- recommendedProducts) {
-          <td>
-              <ul>
-                  <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
-                  <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
-                  <li>$@product.price.value.toString</li>
-                  <li>
-                      @product.averageRating match {
-                          case None => { }
-                          case Some(Rating(rating)) => {
-                              <div class="my-tooltip">
-                                  @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
-                                  <span class="tooltiptext">@rating.formatted("%.1f")</span>
-                              </div>
+        <tr>
+            @for(product <- recommendedProducts) {
+              <td>
+                  <ul>
+                      <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                      <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
+                      <li>$@product.price.value.toString</li>
+                      <li>
+                          @product.averageRating match {
+                              case None => { }
+                              case Some(Rating(rating)) => {
+                                  <div class="my-tooltip">
+                                      @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
+                                      <span class="tooltiptext">@rating.formatted("%.1f")</span>
+                                  </div>
+                              }
                           }
-                      }
-                  </li>
-              </ul>
-          </td>
-        }
+                      </li>
+                  </ul>
+              </td>
+            }
+        </tr>
     </table>
 
     <h1>Latest Reviews</h1>
-    @for((review, product) <- reviews) {
-        <table>
-            <td>
-                <ul>
-                    <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
-                    <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
-                    <li>$@product.price.value.toString</li>
-                </ul>
-            </td>
-            <td>
-                <p>
-                    <span style="font-weight: bold;">@review.author,</span>
-                    <span style="font-weight: lighter;">@review.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))</span>
-                    @{(1 to review.rating.value.toInt).map(_ => "⭐").mkString}
-                </p>
-                <p>@review.content</p>
-            </td>
-        </table>
-    }
+    <table>
+        @for((review, product) <- reviews) {
+            <tr>
+                <td>
+                    <ul>
+                        <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                        <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
+                        <li>$@product.price.value.toString</li>
+                    </ul>
+                </td>
+                <td>
+                    <p>
+                        <span style="font-weight: bold;">@review.author,</span>
+                        <span style="font-weight: lighter;">@review.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))</span>
+                        @{(1 to review.rating.value.toInt).map(_ => "⭐").mkString}
+                    </p>
+                    <p>@review.content</p>
+                </td>
+            </tr>
+        }
+    </table>
 
 }

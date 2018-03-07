@@ -2,15 +2,18 @@ package pl.edu.agh.msc.ui.controllers
 
 import javax.inject.Inject
 
-import _root_.controllers.AssetsFinder
 import com.mohiva.play.silhouette.api.Silhouette
+import com.mohiva.play.silhouette.api.actions.UserAwareRequest
+import controllers.AssetsFinder
 import org.webjars.play.WebJarsUtil
 import pl.edu.agh.msc.auth.infra.DefaultEnv
+import pl.edu.agh.msc.auth.user.User
 import pl.edu.agh.msc.products.{ ProductId, ProductService }
+import pl.edu.agh.msc.ui.views
 import play.api.i18n.I18nSupport
-import play.api.mvc.{ AbstractController, ControllerComponents }
+import play.api.mvc.{ AbstractController, AnyContent, ControllerComponents }
 
-import scala.concurrent.Future
+import scala.concurrent.{ ExecutionContext, Future }
 
 class ProductController @Inject() (
   components:     ControllerComponents,
@@ -19,7 +22,8 @@ class ProductController @Inject() (
 )(
   implicit
   webJarsUtil: WebJarsUtil,
-  assets:      AssetsFinder
+  assets:      AssetsFinder,
+  ec:          ExecutionContext
 ) extends AbstractController(components) with I18nSupport {
 
   def list = silhouette.UserAwareAction.async { implicit request =>
@@ -27,7 +31,15 @@ class ProductController @Inject() (
   }
 
   def details(id: ProductId) = silhouette.UserAwareAction.async { implicit request =>
-    Future.successful(Ok(id.toString))
+    for {
+      product <- productService.findDetailed(id)
+    } yield {
+      Ok(views.html.productDetails(product))
+    }
+  }
+
+  private implicit def unwrapUser(implicit request: UserAwareRequest[DefaultEnv, AnyContent]): Option[User] = {
+    request.identity
   }
 
 }

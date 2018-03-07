@@ -110,6 +110,22 @@ a {
     visibility: visible;
 }
 
+.product-desc > ul {
+    list-style: disc;
+}
+
 ul {
-    list-style:none;
+    list-style: none;
+}
+
+
+.reviews td {
+    padding: 15px
+}
+
+
+td {
+    text-align: left;
+    vertical-align: top;
+    padding: 5px
 }

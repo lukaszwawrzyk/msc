@@ -38,13 +38,24 @@ class InitDb @Inject() (
       val i = faker.random.nextInt(4) + 1
       assetsFinder.path(s"images/p_$i.jpg")
     }
+    val description = {
+      val paragraphs = List.fill(faker.random.nextInt(1) + 3)(faker.lorem.paragraph(faker.random.nextInt(8) + 2))
+        .map(p => "<p>" + p + "</p>")
+      val features = List.fill(faker.random.nextInt(7) + 3)(faker.lorem.sentence(2, 5))
+        .map(f => "<li>" + f + "</li>").mkString("<ul>", "", "</ul>")
+      val allParagraphs = paragraphs match {
+        case first :: rest => first :: features :: rest
+        case Nil           => features :: Nil
+      }
+      allParagraphs.mkString
+    }
     for {
       id <- productsRepository.insert(ProductRepoView(
         name,
         Money(0),
         photo               = Some(photo),
         cachedAverageRating = None,
-        description         = ""
+        description         = description
       ))
       _ <- pricesRepository.save(id, price)
       _ <- Future.traverse(0 to faker.random.nextInt(15))(_ => reviewRepository.insert(id, createReview()))
