@@ -12,7 +12,7 @@ POST        /signIn                          pl.edu.agh.msc.auth.controllers.Sig
 # landing page
 GET         /landing                         pl.edu.agh.msc.ui.controllers.LandingPageController.view
 # products
-GET         /products                        pl.edu.agh.msc.ui.controllers.ProductController.list
+GET         /products                        pl.edu.agh.msc.ui.controllers.ProductController.list(text: Option[String] = None, minPrice: Option[Int] = None, maxPrice: Option[Int] = None, minRating: Option[Int] = None, size: Option[Int] = None, page: Option[Int] = None)
 GET         /products/:id                    pl.edu.agh.msc.ui.controllers.ProductController.details(id: ProductId)
 
 # common

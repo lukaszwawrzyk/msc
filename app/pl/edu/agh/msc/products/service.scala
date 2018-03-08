@@ -23,7 +23,7 @@ case class Filtering(
 )
 
 object Filtering {
-  case class PriceRange(from: Money, to: Money)
+  case class PriceRange(from: Option[Money], to: Option[Money])
 }
 
 case class Pagination(size: Int, page: Int)

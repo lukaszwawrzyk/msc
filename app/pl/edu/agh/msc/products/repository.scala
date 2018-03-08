@@ -62,7 +62,10 @@ case class ProductRepoView(
     val filteredQuery = baseQuery.filter { p =>
       filtering.minRating.map(minRating => p.cachedAverageRating >= minRating.value).getOrElse(LiteralColumn(true).?) &&
         filtering.text.map(text => (p.name.toLowerCase like s"%$text%") || (p.description.toLowerCase like s"%$text%")).getOrElse(LiteralColumn(true)) &&
-        filtering.priceRange.map { case PriceRange(Money(from), Money(to)) => p.cachedPrice >= from && p.cachedPrice <= to }.getOrElse(LiteralColumn(true))
+        filtering.priceRange.map {
+          case PriceRange(from, to) =>
+            p.cachedPrice >= from.map(_.value) && p.cachedPrice <= to.map(_.value)
+        }.map(_.getOrElse(true)).getOrElse(LiteralColumn(true))
     }
 
     val finalQuery = filteredQuery.sortBy { p =>

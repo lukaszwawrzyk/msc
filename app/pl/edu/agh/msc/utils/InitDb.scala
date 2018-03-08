@@ -7,6 +7,7 @@ import javax.inject.Inject
 
 import com.github.javafaker.Faker
 import controllers.AssetsFinder
+import pl.edu.agh.msc.availability.{ Availability, AvailabilityRepository }
 import pl.edu.agh.msc.pricing.{ Money, PriceRepository }
 import pl.edu.agh.msc.products.{ ProductId, ProductRepoView, ProductRepository, ProductService }
 import pl.edu.agh.msc.review.{ Rating, Review, ReviewRepository }
@@ -20,6 +21,7 @@ class InitDb @Inject() (
   productsRepository: ProductRepository,
   pricesRepository:   PriceRepository,
   reviewRepository:   ReviewRepository,
+  availabilityRepository: AvailabilityRepository,
   assetsFinder:       AssetsFinder
 )(implicit ec: ExecutionContext) {
 
@@ -33,7 +35,7 @@ class InitDb @Inject() (
   private def createAndSaveProduct(): Future[ProductId] = {
     val category = faker.resolve("commerce.department")
     val name = faker.commerce.productName()
-    val price = Money(BigDecimal(faker.commerce.price(1, 2000)))
+    val price = Money(BigDecimal(faker.commerce.price(2, 2000)))
     val photo = {
       val i = faker.random.nextInt(4) + 1
       assetsFinder.path(s"images/p_$i.jpg")
@@ -49,6 +51,7 @@ class InitDb @Inject() (
       }
       allParagraphs.mkString
     }
+    val stock = Availability(faker.random.nextInt(100))
     for {
       id <- productsRepository.insert(ProductRepoView(
         name,
@@ -58,6 +61,7 @@ class InitDb @Inject() (
         description         = description
       ))
       _ <- pricesRepository.save(id, price)
+      _ <- availabilityRepository.save(id, stock)
       _ <- Future.traverse(0 to faker.random.nextInt(15))(_ => reviewRepository.insert(id, createReview()))
       _ <- productService.findDetailed(id) // triggers cache update
     } yield id
