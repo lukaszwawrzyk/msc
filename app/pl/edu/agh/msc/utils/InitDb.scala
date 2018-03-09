@@ -17,12 +17,12 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.implicitConversions
 
 class InitDb @Inject() (
-  productService:     ProductService,
-  productsRepository: ProductRepository,
-  pricesRepository:   PriceRepository,
-  reviewRepository:   ReviewRepository,
+  productService:         ProductService,
+  productsRepository:     ProductRepository,
+  pricesRepository:       PriceRepository,
+  reviewRepository:       ReviewRepository,
   availabilityRepository: AvailabilityRepository,
-  assetsFinder:       AssetsFinder
+  assetsFinder:           AssetsFinder
 )(implicit ec: ExecutionContext) {
 
   Locale.setDefault(Locale.ENGLISH)
@@ -30,7 +30,12 @@ class InitDb @Inject() (
   private val faker = new Faker(new Random())
 
   println("Initializing data")
-  Future.traverse(1 to 1000)(_ => createAndSaveProduct()).foreach(_ => println("Initialized"))
+  def run(left: Int): Future[ProductId] = {
+    println(s"creating, $left left")
+    if (left == 0) createAndSaveProduct()
+    else createAndSaveProduct().flatMap(_ => run(left - 1))
+  }
+  run(500).foreach(_ => println("Initialized"))
 
   private def createAndSaveProduct(): Future[ProductId] = {
     val category = faker.resolve("commerce.department")
@@ -51,7 +56,7 @@ class InitDb @Inject() (
       }
       allParagraphs.mkString
     }
-    val stock = Availability(faker.random.nextInt(100))
+    val stock = Availability(faker.random.nextLong(100))
     for {
       id <- productsRepository.insert(ProductRepoView(
         name,

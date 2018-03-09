@@ -12,74 +12,64 @@
 @import pl.edu.agh.msc.availability.Availability
 @import java.time.format.{ DateTimeFormatter, FormatStyle }
 
-@(product: Paginated[ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+@(
+  paginated: Paginated[ProductShort],
+  text:      Option[String],
+  minPrice:  Option[Int],
+  maxPrice:  Option[Int],
+  minRating: Option[Int]
+)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main(s"Simple Shop - Products", user) {
-    @*<table>
-        <tr>
-            <td>
-                <img src="@product.photo.getOrElse { @assets.path("images/placeholder_full.jpg") }">
-            </td>
-            <td>
-                <ul>
-                    <li>
-                        <h2>@product.name</h2>
-                    </li>
-                    <li>
-                    @product.averageRating match {
+    <div class="text-center">
+        <ul class="pagination">
+            @paginated.prev.map { page =>
+                <li class="prev">
+                    <a href="@routes.ProductController.list(text, minPrice, maxPrice, minRating, Some(paginated.pagination.size), Some(page))">&laquo;</a>
+                </li>
+            }.getOrElse {
+                <li class="disabled"><span>&laquo;</span></li>
+            }
+
+            <li class="active">
+                <a>Displaying page @paginated.pagination.page of @paginated.totalPages</a>
+            </li>
+
+            @paginated.next.map { page =>
+                <li class="next">
+                    <a href="@routes.ProductController.list(text, minPrice, maxPrice, minRating, Some(paginated.pagination.size), Some(page))">&raquo;</a>
+                </li>
+            }.getOrElse {
+                <li class="next disabled"><span>&raquo;</span></li>
+            }
+        </ul>
+    </div>
+
+
+   <table>
+      @for(row <- paginated.data.grouped(4)) {
+         <tr>
+            @for(product <- row) {
+               <td>
+                  <ul>
+                     <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                     <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
+                     <li>$@product.price.value.toString</li>
+                     <li>
+                     @product.averageRating match {
                         case None => { }
                         case Some(Rating(rating)) => {
-                            <div class="my-tooltip">
-                                @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
-                            <span class="tooltiptext">@rating.formatted("%.1f")</span>
-                            </div>
+                           <div class="my-tooltip">
+                              @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
+                           <span class="tooltiptext">@rating.formatted("%.1f")</span>
+                           </div>
                         }
-                    }
-                    </li>
-                    <li>
-                        Price: $@product.price.value.toString
-                    </li>
-                    <li>
-                        Stock: @product.availability match {
-                        case None => { Unknown }
-                        case Some(Availability(amount)) => {
-                            @if(amount == 0) {
-                                Unavailable
-                            } else if (amount <= 5) {
-                            Only @amount available
-                            } else {
-                            Available
-                            }
-                    }
-                    }
-                    </li>
-                    <li class="product-desc">@Html(product.description)</li>
-                </ul>
-            </td>
-        </tr>
-    </table>
-
-    <h3 style="text-align: center">Reviews</h3>
-    <table class="reviews">
-    @for(review <- product.reviews) {
-        <tr>
-            <td>
-                <ul style="white-space: nowrap;">
-                    <li>
-                        <span style="font-weight: bold;">@review.author</span>
-                    </li>
-                    <li>
-                        <span style="font-weight: lighter;">@review.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))</span>
-                    </li>
-                    <li>
-                    @{(1 to review.rating.value.toInt).map(_ => "⭐").mkString}
-                    </li>
-                </ul>
-            </td>
-            <td>
-            @review.content
-            </td>
-        </tr>
-    }
-    </table>*@
+                     }
+                     </li>
+                  </ul>
+               </td>
+            }
+         </tr>
+      }
+   </table>
 }

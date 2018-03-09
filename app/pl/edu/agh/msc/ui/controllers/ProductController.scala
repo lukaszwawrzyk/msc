@@ -45,7 +45,7 @@ class ProductController @Inject() (
     for {
       paginated <- productService.list(filtering, pagination)
     } yield {
-      Ok(views.html.productList(paginated))
+      Ok(views.html.productList(paginated, text, minPrice, maxPrice, minRating))
     }
   }
 

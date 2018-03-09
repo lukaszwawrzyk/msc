@@ -28,7 +28,10 @@ object Filtering {
 
 case class Pagination(size: Int, page: Int)
 
-case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A])
+case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
+  def next = Option(pagination.page + 1).filter(_ <= totalPages)
+  def prev = Option(pagination.page - 1).filter(_ >= 1)
+}
 
 @Singleton class ProductService @Inject() (
   productRepository:   ProductRepository,

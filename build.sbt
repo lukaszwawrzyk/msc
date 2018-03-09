@@ -16,8 +16,7 @@ scalacOptions ++= Seq(
   "-Ywarn-adapted-args",
   "-Ywarn-dead-code",
   "-Ywarn-inaccessible",
-  "-Ywarn-nullary-override",
-  "-Ywarn-numeric-widen"
+  "-Ywarn-nullary-override"
 )
 
 resolvers ++= Seq(
