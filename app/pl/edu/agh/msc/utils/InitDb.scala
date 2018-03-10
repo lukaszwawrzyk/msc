@@ -9,7 +9,7 @@ import com.github.javafaker.Faker
 import controllers.AssetsFinder
 import pl.edu.agh.msc.availability.{ Availability, AvailabilityRepository }
 import pl.edu.agh.msc.pricing.{ Money, PriceRepository }
-import pl.edu.agh.msc.products.{ ProductId, ProductRepoView, ProductRepository, ProductService }
+import pl.edu.agh.msc.products._
 import pl.edu.agh.msc.review.{ Rating, Review, ReviewRepository }
 
 import scala.collection.JavaConverters._
@@ -35,7 +35,10 @@ class InitDb @Inject() (
     if (left == 0) createAndSaveProduct()
     else createAndSaveProduct().flatMap(_ => run(left - 1))
   }
-  run(500).foreach(_ => println("Initialized"))
+
+  productService.list(Filtering(), Pagination(1, 1)).flatMap { res =>
+    if (res.data.isEmpty) run(500).map(_ => println("Initialized")) else Future.successful(println("Already initialized"))
+  }
 
   private def createAndSaveProduct(): Future[ProductId] = {
     val category = faker.resolve("commerce.department")

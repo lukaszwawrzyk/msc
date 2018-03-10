@@ -21,55 +21,86 @@
 )(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main(s"Simple Shop - Products", user) {
-    <div class="text-center">
-        <ul class="pagination">
-            @paginated.prev.map { page =>
+
+    <form action="@routes.ProductController.list().url" method="get" id="search-form" class="text-center">
+        <div class="form-group form-inline">
+            <input type="text"   class="form-control"   id="text"      name="text"      placeholder="What are you looking for?" @text.map  { v => value="@v" }.getOrElse { }>
+            <input type="number" class="form-control" id="minPrice"  name="minPrice"  placeholder="min price"  @minPrice.map  { v => value="@v" }.getOrElse { }>
+            <input type="number" class="form-control" id="maxPrice"  name="maxPrice"  placeholder="max price"  @maxPrice.map  { v => value="@v" }.getOrElse { }>
+            <input type="number" class="form-control" id="minRating" name="minRating" placeholder="min rating" @minRating.map { v => value="@v" }.getOrElse { }>
+            <input type="hidden" class="form-control" id="size"      name="size"      value="@paginated.pagination.size">
+        </div>
+        <div class="form-group">
+            <input type="submit" class="btn btn-lg btn-primary" value="Search">
+        </div>
+    </form>
+    <script>
+        var form = document.getElementById('search-form');
+        form.addEventListener('submit', function () {
+            var allInputs = form.getElementsByTagName('input');
+            for (var i = 0; i < allInputs.length; i++) {
+                var input = allInputs[i];
+                if (input.name && !input.value) {
+                    input.name = '';
+                }
+            }
+        });
+    </script>
+    @if(paginated.data.isEmpty) {
+        <h2>No results :/</h2>
+    } else {
+        <table>
+        @for(row <- paginated.data.grouped(4)) {
+            <tr>
+            @for(product <- row) {
+                <td>
+                    <ul>
+                        <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                        <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
+                        <li>$@product.price.value.toString</li>
+                        <li>
+                        @product.averageRating match {
+                            case None => { }
+                            case Some(Rating(rating)) => {
+                                <div class="my-tooltip">
+                                    @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
+                                <span class="tooltiptext">@rating.formatted("%.1f")</span>
+                                </div>
+                            }
+                        }
+                        </li>
+                    </ul>
+                </td>
+            }
+            </tr>
+        }
+        </table>
+        <div class="text-center">
+            <ul class="pagination">
+                @paginated.prev.map { page =>
                 <li class="prev">
                     <a href="@routes.ProductController.list(text, minPrice, maxPrice, minRating, Some(paginated.pagination.size), Some(page))">&laquo;</a>
                 </li>
-            }.getOrElse {
-                <li class="disabled"><span>&laquo;</span></li>
-            }
+                }.getOrElse {
+                    <li class="disabled"><span>&laquo;</span></li>
+                }
 
-            <li class="active">
-                <a>Displaying page @paginated.pagination.page of @paginated.totalPages</a>
-            </li>
+                <li class="active">
+                    <a>Displaying page @paginated.pagination.page of @paginated.totalPages</a>
+                </li>
 
-            @paginated.next.map { page =>
+                @paginated.next.map { page =>
                 <li class="next">
                     <a href="@routes.ProductController.list(text, minPrice, maxPrice, minRating, Some(paginated.pagination.size), Some(page))">&raquo;</a>
                 </li>
-            }.getOrElse {
-                <li class="next disabled"><span>&raquo;</span></li>
-            }
-        </ul>
-    </div>
+                }.getOrElse {
+                    <li class="next disabled"><span>&raquo;</span></li>
+                }
+            </ul>
+        </div>
+    }
 
 
-   <table>
-      @for(row <- paginated.data.grouped(4)) {
-         <tr>
-            @for(product <- row) {
-               <td>
-                  <ul>
-                     <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
-                     <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
-                     <li>$@product.price.value.toString</li>
-                     <li>
-                     @product.averageRating match {
-                        case None => { }
-                        case Some(Rating(rating)) => {
-                           <div class="my-tooltip">
-                              @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
-                           <span class="tooltiptext">@rating.formatted("%.1f")</span>
-                           </div>
-                        }
-                     }
-                     </li>
-                  </ul>
-               </td>
-            }
-         </tr>
-      }
-   </table>
+
+
 }
