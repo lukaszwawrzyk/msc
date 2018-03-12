@@ -14,6 +14,8 @@ GET         /landing                         pl.edu.agh.msc.ui.controllers.Landi
 # products
 GET         /products                        pl.edu.agh.msc.ui.controllers.ProductController.list(text: Option[String] ?= None, minPrice: Option[Int] ?= None, maxPrice: Option[Int] ?= None, minRating: Option[Int] ?= None, size: Option[Int] ?= None, page: Option[Int] ?= None)
 GET         /products/$id<[0-9]+>            pl.edu.agh.msc.ui.controllers.ProductController.details(id: ProductId)
+#cart
+POST        /cart/add/:productId             pl.edu.agh.msc.ui.controllers.CartController.add(productId: ProductId)
 
 # common
 GET         /assets/*file                    controllers.Assets.versioned(file)

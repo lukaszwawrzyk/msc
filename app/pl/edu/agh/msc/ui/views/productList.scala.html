@@ -24,7 +24,7 @@
 
     <form action="@routes.ProductController.list().url" method="get" id="search-form" class="text-center">
         <div class="form-group form-inline">
-            <input type="text"   class="form-control"   id="text"      name="text"      placeholder="What are you looking for?" @text.map  { v => value="@v" }.getOrElse { }>
+            <input type="text"   class="form-control" id="text"      name="text"      placeholder="What are you looking for?" @text.map  { v => value="@v" }.getOrElse { }>
             <input type="number" class="form-control" id="minPrice"  name="minPrice"  placeholder="min price"  @minPrice.map  { v => value="@v" }.getOrElse { }>
             <input type="number" class="form-control" id="maxPrice"  name="maxPrice"  placeholder="max price"  @maxPrice.map  { v => value="@v" }.getOrElse { }>
             <input type="number" class="form-control" id="minRating" name="minRating" placeholder="min rating" @minRating.map { v => value="@v" }.getOrElse { }>

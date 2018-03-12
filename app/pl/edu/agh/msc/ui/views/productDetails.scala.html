@@ -10,6 +10,7 @@
 @import pl.edu.agh.msc.review.Rating
 @import pl.edu.agh.msc.availability.Availability
 @import java.time.format.{ DateTimeFormatter, FormatStyle }
+@import views.html.helper.CSRF
 
 @(product: ProductDetails)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
@@ -54,6 +55,15 @@
                         }
                     </li>
                     <li class="product-desc">@Html(product.description)</li>
+                    @if(user.isDefined) {
+                        <li>
+                            <form action="@routes.CartController.add(product.id)" method="post" class="form-inline">
+                                @CSRF.formField
+                                <input type="number" class="form-control" id="amount" name="amount" placeholder="amount" value="1">
+                                <input type="submit" class="btn btn-lg btn-primary" value="Add to Cart">
+                            </form>
+                        </li>
+                    }
                 </ul>
             </td>
         </tr>
