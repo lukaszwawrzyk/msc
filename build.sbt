@@ -60,7 +60,8 @@ enablePlugins(PlayScala)
 routesGenerator := InjectedRoutesGenerator
 routesImport ++= Seq(
   "pl.edu.agh.msc.utils.Binders._",
-  "pl.edu.agh.msc.products.ProductId"
+  "pl.edu.agh.msc.products.ProductId",
+  "pl.edu.agh.msc.orders.OrderId"
 )
 TwirlKeys.templateImports := Seq()
 
