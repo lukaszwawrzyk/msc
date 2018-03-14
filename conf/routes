@@ -24,6 +24,7 @@ POST        /order/:id/confirm               pl.edu.agh.msc.ui.controllers.Order
 POST        /order/:id/paid                  pl.edu.agh.msc.ui.controllers.OrderController.paid(id: OrderId)
 #payments
 GET         /payment/:id                     pl.edu.agh.msc.ui.controllers.PaymentController.view(id: PaymentId)
+POST        /payment/:id/pay                 pl.edu.agh.msc.ui.controllers.PaymentController.pay(id: PaymentId)
 
 # common
 GET         /assets/*file                    controllers.Assets.versioned(file)

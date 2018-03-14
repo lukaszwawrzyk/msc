@@ -2,61 +2,116 @@
 @import pl.edu.agh.msc.auth.user.User
 @import pl.edu.agh.msc.auth.views.html.main
 @import pl.edu.agh.msc.ui.controllers.routes
-@import pl.edu.agh.msc.payment.PaymentRequest
+@import pl.edu.agh.msc.payment.{ PaymentRequest, PaymentId }
 @import play.twirl.api.Html
 @import org.webjars.play.WebJarsUtil
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
 @import views.html.helper.CSRF
 
-@(payment: PaymentRequest)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+@(payment: PaymentRequest, id: PaymentId)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main("Payment", user) {
-
-
     <div class="container">
         <div class="row">
-            <div class="col-sm">
-                One of three columns
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-title">
+                            <h3 class="text-center">Summary</h3>
+                        </div>
+                        <hr>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Amount</th>
+                                    <th scope="col">Unit Price</th>
+                                </tr>
+                            </thead>
+                            @for(product <- payment.products) {
+                                <tr>
+                                    <td>@product.name</td>
+                                    <td>@product.amount</td>
+                                    <td>$@product.unitPrice.value.toString</td>
+                                </tr>
+                            }
+                            <tr class="table-primary">
+                                <td colspan="2">Total price</td>
+                                <td>$@payment.totalPrice.value.toString</td>
+                            </tr>
+                        </table>
+                        <div>
+                            <h4>Address</h4>
+                            @payment.address.fullName<br/>
+                            @payment.address.streetAddress<br/>
+                            @payment.address.zipCode @payment.address.city<br/>
+                            @payment.address.country<br/>
+                            <h4>Contact</h4>
+                            @payment.email
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-sm">
-                One of three columns
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="card-title">
+                            <h3 class="text-center">Pay</h3>
+                        </div>
+                        <hr>
+                        <form action="@routes.PaymentController.pay(id)" method="post" novalidate="novalidate">
+                            @CSRF.formField
+                            <div class="form-group text-center">
+                                <ul class="list-inline">
+                                    <li class="list-inline-item"><i class="text-muted fa fa-cc-visa fa-2x"></i></li>
+                                    <li class="list-inline-item"><i class="fa fa-cc-mastercard fa-2x"></i></li>
+                                    <li class="list-inline-item"><i class="fa fa-cc-amex fa-2x"></i></li>
+                                    <li class="list-inline-item"><i class="fa fa-cc-discover fa-2x"></i></li>
+                                </ul>
+                            </div>
+                            <div class="form-group has-success">
+                                <label for="cc-name" class="control-label mb-1">Name on card</label>
+                                <input id="cc-name" name="cc-name" type="text" class="form-control cc-name valid" data-val="true" data-val-required="Please enter the name on card" autocomplete="cc-name" aria-required="true" aria-invalid="false" aria-describedby="cc-name-error">
+                                <span class="help-block field-validation-valid" data-valmsg-for="cc-name" data-valmsg-replace="true"></span>
+                            </div>
+                            <div class="form-group">
+                                <label for="cc-number" class="control-label mb-1">Card number</label>
+                                <input id="cc-number" name="cc-number" type="tel" class="form-control cc-number identified visa" value="" data-val="true" data-val-required="Please enter the card number" data-val-cc-number="Please enter a valid card number" autocomplete="cc-number">
+                                <span class="help-block" data-valmsg-for="cc-number" data-valmsg-replace="true"></span>
+                            </div>
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="form-group">
+                                        <label for="cc-exp" class="control-label mb-1">Expiration</label>
+                                        <input id="cc-exp" name="cc-exp" type="tel" class="form-control cc-exp" value="" data-val="true" data-val-required="Please enter the card expiration" data-val-cc-exp="Please enter a valid month and year" placeholder="MM / YY" autocomplete="cc-exp">
+                                        <span class="help-block" data-valmsg-for="cc-exp" data-valmsg-replace="true"></span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label for="x_card_code" class="control-label mb-1">Security code</label>
+                                    <div class="input-group">
+                                        <input id="x_card_code" name="x_card_code" type="tel" class="form-control cc-cvc" value="" data-val="true" data-val-required="Please enter the security code" data-val-cc-cvc="Please enter a valid security code" autocomplete="off">
+                                        <div class="input-group-addon">
+                                            <span class="fa fa-question-circle fa-lg" data-toggle="popover" data-container="body" data-html="true" data-title="Security Code"
+                                            data-content="<div class='text-center one-card'>The 3 digit code on back of the card..<div class='visa-mc-cvc-preview'></div></div>"
+                                            data-trigger="hover"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button id="payment-button" type="submit" class="btn btn-lg btn-primary btn-block">
+                                    <i class="fa fa-lock fa-lg"></i>&nbsp;
+                                    <span id="payment-button-amount">Pay $@payment.totalPrice.value.toString</span>
+                                    <span id="payment-button-sending" style="display:none;">Sending…</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
-    @*
-    <table class="table table-striped">
-        <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Amount</th>
-            <th>Price</th>
-        </tr>
-        @for(item <- cart.items) {
-            <tr>
-                <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
-                <td>@products(item.product).name</td>
-                <td>@item.amount</td>
-                <td>@products(item.product).price.value.toString</td>
-            </tr>
-        }
-    </table>
-
-    <h3>Address</h3>
-    <form action="@routes.OrderController.draft()" method="post">
-        @CSRF.formField
-        <input type="text" class="form-control" id="fullName"      name="address.fullName"      placeholder="Full Name">
-        <input type="text" class="form-control" id="streetAddress" name="address.streetAddress" placeholder="Street Address">
-        <input type="text" class="form-control" id="zipCode"       name="address.zipCode"       placeholder="Zip Code">
-        <input type="text" class="form-control" id="city"          name="address.city"          placeholder="City">
-        <input type="text" class="form-control" id="country"       name="address.country"       placeholder="Country">
-        @for((items, index) <- cart.items.zipWithIndex) {
-            <input type="hidden" id="cart.items[@index].product" name="cart.items[@index].product" value="@items.product.value">
-            <input type="hidden" id="cart.items[@index].amount"  name="cart.items[@index].amount"  value="@items.amount">
-        }
-        <input type="submit" class="btn btn-lg btn-primary" value="Checkout">
-    </form>
-    *@
 
 }
