@@ -60,7 +60,7 @@
                             <form action="@routes.CartController.add(product.id)" method="post" class="form-inline">
                                 @CSRF.formField
                                 <input type="number" class="form-control" id="amount" name="amount" placeholder="amount" value="1">
-                                <input type="submit" class="btn btn-lg btn-primary" value="Add to Cart">
+                                <button type="submit" class="btn btn-primary btn-lg"> Add to Cart </button>
                             </form>
                         </li>
                     }

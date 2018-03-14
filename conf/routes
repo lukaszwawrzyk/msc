@@ -19,7 +19,11 @@ GET         /cart                            pl.edu.agh.msc.ui.controllers.CartC
 POST        /cart/add/:productId             pl.edu.agh.msc.ui.controllers.CartController.add(productId: ProductId)
 #orders
 POST        /order/draft                     pl.edu.agh.msc.ui.controllers.OrderController.draft
-GET         /order/:id                       pl.edu.agh.msc.ui.controllers.OrderController.show(id: OrderId)
+GET         /order/:id                       pl.edu.agh.msc.ui.controllers.OrderController.view(id: OrderId)
+POST        /order/:id/confirm               pl.edu.agh.msc.ui.controllers.OrderController.confirm(id: OrderId)
+POST        /order/:id/paid                  pl.edu.agh.msc.ui.controllers.OrderController.paid(id: OrderId)
+#payments
+GET         /payment/:id                     pl.edu.agh.msc.ui.controllers.PaymentController.view(id: PaymentId)
 
 # common
 GET         /assets/*file                    controllers.Assets.versioned(file)

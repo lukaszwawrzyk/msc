@@ -4,10 +4,22 @@ import java.net.URL
 import java.util.UUID
 import javax.inject.{ Inject, Singleton }
 
+import play.api.libs.ws.WSClient
+
 import scala.concurrent.{ ExecutionContext, Future }
 
 trait NotificationService {
   def notifyURL(url: URL): Future[Unit]
+}
+
+@Singleton class WSNotificationService @Inject() (
+  ws: WSClient
+)(implicit ec: ExecutionContext) extends NotificationService {
+
+  override def notifyURL(url: URL): Future[Unit] = {
+    ws.url(url.toString).post("").map(_ => ())
+  }
+
 }
 
 @Singleton class PaymentService @Inject() (
@@ -20,20 +32,22 @@ trait NotificationService {
     paymentRepository.insert(id, payment).map(_ => id)
   }
 
-  private[payment] def get(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = {
+  def isPaid(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = {
+    paymentRepository.getPaymentStatus(id)
+  }
+
+  // internal stuff
+
+  def get(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = {
     paymentRepository.find(id)
   }
 
-  private[payment] def pay(id: PaymentId)(implicit ec: ExecutionContext): Future[Unit] = {
+  def pay(id: PaymentId)(implicit ec: ExecutionContext): Future[Unit] = {
     for {
       _ <- paymentRepository.setPaymentStatus(id, isPaid = true)
       payment <- paymentRepository.find(id)
       _ <- notificationService.notifyURL(payment.returnUrl)
     } yield ()
-  }
-
-  def isPaid(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = {
-    paymentRepository.getPaymentStatus(id)
   }
 
 }

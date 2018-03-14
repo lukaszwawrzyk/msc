@@ -21,7 +21,13 @@ case class Order(
   status:  OrderStatus.Value,
   items:   Seq[LineItem],
   date:    LocalDateTime
-)
+) {
+
+  def totalPrice: Money = {
+    items.map(item => item.price * item.amount).reduce(_ + _)
+  }
+
+}
 
 object OrderStatus extends Enumeration {
   val Unconfirmed, Confirmed, Paid = Value

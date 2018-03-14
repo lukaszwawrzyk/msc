@@ -1,34 +1,27 @@
 package pl.edu.agh.msc.ui.controllers
 
+import java.net.URL
 import javax.inject.Inject
 
-import com.mohiva.play.silhouette.api.Silhouette
-import com.mohiva.play.silhouette.api.actions.SecuredRequest
-import controllers.AssetsFinder
-import org.webjars.play.WebJarsUtil
-import pl.edu.agh.msc.auth.infra.DefaultEnv
-import pl.edu.agh.msc.auth.user.User
-import pl.edu.agh.msc.cart.{ Cart, CartItem, CartService }
+import pl.edu.agh.msc.cart.{ Cart, CartItem }
 import pl.edu.agh.msc.orders.{ Address, OrderDraft, OrderId, OrdersService }
+import pl.edu.agh.msc.payment.{ PaymentRequest, PaymentService, Product }
 import pl.edu.agh.msc.products.{ ProductId, ProductService }
 import pl.edu.agh.msc.ui.views
-import play.api.data.Forms.{ mapping, seq, _ }
+import pl.edu.agh.msc.utils._
+import play.api.data.Forms._
 import play.api.data.{ Form, Mapping }
-import play.api.i18n.I18nSupport
-import play.api.mvc.{ AbstractController, AnyContent, ControllerComponents }
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 
 class OrderController @Inject() (
-  components:     ControllerComponents,
-  silhouette:     Silhouette[DefaultEnv],
-  ordersService: OrdersService
-)(
-  implicit
-  webJarsUtil: WebJarsUtil,
-  assets:      AssetsFinder,
-  ec:          ExecutionContext
-) extends AbstractController(components) with I18nSupport {
+  sc:     SecuredController,
+  ordersService:  OrdersService,
+  productService: ProductService,
+  paymentService: PaymentService
+){
+
+  import sc._
 
   private val productIdMapping: Mapping[ProductId] = longNumber.transform(ProductId(_), _.value)
 
@@ -57,21 +50,47 @@ class OrderController @Inject() (
   )
 
 
-  def draft = silhouette.SecuredAction.async { implicit request =>
+  def draft = Secured.async { implicit request =>
     orderForm.bindFromRequest.fold(
       e => Future.successful(BadRequest(e.errors.toString)),
       orderDraft => ordersService.saveDraft(orderDraft, request.identity.id).map { id =>
-        Redirect(routes.OrderController.show(id))
+        Redirect(routes.OrderController.view(id))
       }
     )
   }
 
-  def show(id: OrderId) = silhouette.SecuredAction.async { implicit request =>
-    Future.successful(Ok(id.toString))
+  def view(id: OrderId) = Secured.async { implicit request =>
+    for {
+      order <- ordersService.find(id)
+      products <- buildMap(order.items.map(_.product))(productService.findShort)
+    } yield {
+      Ok(views.html.orderConfirmation(order, products))
+    }
   }
 
-  private implicit def unwrapUser(implicit request: SecuredRequest[DefaultEnv, AnyContent]): Option[User] = {
-    Some(request.identity)
+  def confirm(id: OrderId) = Secured.async { implicit request =>
+    for {
+      order <- ordersService.find(id)
+      res <- if (order.buyer != request.identity.id) {
+        Future.successful(BadRequest("You don't have such order"))
+      } else {
+        for {
+          _ <- ordersService.confirm(id)
+          products <- buildMap(order.items.map(_.product))(productService.findShort)
+          paymentId <- paymentService.create(PaymentRequest(
+            order.totalPrice,
+            request.identity.email.getOrElse(""),
+            order.address,
+            order.items.map(item => Product(products(item.product).name, item.price, item.amount)),
+            new URL(routes.OrderController.paid(id).absoluteURL())
+          ))
+        } yield Redirect(routes.PaymentController.view(paymentId))
+      }
+    } yield res
+  }
+
+  def paid(id: OrderId) = UserAware.async { implicit request =>
+    ordersService.paymentConfirmed(id).map(_ => Ok)
   }
 
 }

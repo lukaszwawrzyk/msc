@@ -3,6 +3,7 @@ package pl.edu.agh.msc.utils
 import java.util.UUID
 
 import pl.edu.agh.msc.orders.OrderId
+import pl.edu.agh.msc.payment.PaymentId
 import pl.edu.agh.msc.products.ProductId
 import play.api.mvc.PathBindable
 import play.api.mvc.PathBindable.Parsing
@@ -18,5 +19,8 @@ object Binders {
 
   implicit val orderIdBindable: PathBindable[OrderId] =
     implicitly[PathBindable[UUID]].transform(OrderId(_), _.value)
+
+  implicit val paymentIdBindable: PathBindable[PaymentId] =
+    implicitly[PathBindable[UUID]].transform(PaymentId(_), _.value)
 
 }

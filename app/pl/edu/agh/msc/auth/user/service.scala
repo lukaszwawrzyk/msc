@@ -1,5 +1,6 @@
 package pl.edu.agh.msc.auth.user
 
+import java.util.UUID
 import javax.inject.Inject
 
 import com.mohiva.play.silhouette.api.LoginInfo
