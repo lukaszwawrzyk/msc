@@ -70,27 +70,33 @@
     </table>
 
     <h3 style="text-align: center">Reviews</h3>
-    <table class="reviews">
-        @for(review <- product.reviews) {
-            <tr>
-                <td>
-                    <ul style="white-space: nowrap;">
-                        <li>
-                            <span style="font-weight: bold;">@review.author</span>
-                        </li>
-                        <li>
-                            <span style="font-weight: lighter;">@review.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))</span>
-                        </li>
-                        <li>
-                            @{(1 to review.rating.value.toInt).map(_ => "⭐").mkString}
-                        </li>
-                    </ul>
-                </td>
-                <td>
-                    @review.content
-                </td>
-            </tr>
-        }
-    </table>
+    @for(review <- product.reviews) {
+        <div class="row justify-content-center mt-4">
+            <div class="col-4">
+                <ul style="white-space: nowrap;">
+                    <li>
+                        <span style="font-weight: bold;">@review.author</span>
+                    </li>
+                    <li>
+                        <span style="font-weight: lighter;">@review.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))</span>
+                    </li>
+                    <li>
+                        @{(1 to review.rating.value.toInt).map(_ => "⭐").mkString}
+                    </li>
+                </ul>
+            </div>
+            <div class="col-8">
+                @review.content
+            </div>
+        </div>
+    }
+    <h4 style="text-align: center" class="mt-5 mb-2">Your review</h4>
+    <form action="@routes.ProductController.review(product.id)" method="post" class="mb-5">
+        @CSRF.formField
+        <input type="text" class="form-control" id="author" name="author" placeholder="Name or nick" value="@user.flatMap(_.fullName).getOrElse { }">
+        <input type="number" class="form-control" id="rating" name="rating" min="1" max="5" value="5">
+        <textarea class="form-control" id="content" name="content" placeholder="Review" rows="5"></textarea>
+        <button type="submit" class="btn btn-primary btn-block">Save review</button>
+    </form>
 
 }

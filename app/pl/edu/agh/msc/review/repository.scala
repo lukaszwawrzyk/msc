@@ -42,7 +42,7 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   private val byProductQuery = Compiled { product: Rep[Long] =>
-    baseQuery.filter(_.productId === product)
+    baseQuery.filter(_.productId === product).sortBy(_.date.desc)
   }
 
   def averageRating(product: ProductId)(implicit ec: ExecutionContext): Future[Option[Rating]] = db.run {

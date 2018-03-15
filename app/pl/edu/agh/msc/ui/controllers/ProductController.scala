@@ -1,23 +1,46 @@
 package pl.edu.agh.msc.ui.controllers
 
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 import cats.syntax.option._
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.products.{ Filtering, Pagination, ProductId, ProductService }
-import pl.edu.agh.msc.review.Rating
+import pl.edu.agh.msc.review.{ Rating, Review, ReviewService }
 import pl.edu.agh.msc.ui.views
-import pl.edu.agh.msc.utils.SecuredController
+import pl.edu.agh.msc.utils.{ SecuredController, Time }
+import play.api.data.Forms._
+import play.api.data.{ Form, Mapping }
+
+import scala.concurrent.Future
 
 class ProductController @Inject() (
   sc:             SecuredController,
-  productService: ProductService
+  productService: ProductService,
+  reviewService:  ReviewService,
+  time:           Time
 ) {
 
   import sc._
 
   private val DefaultPageSize = 20
+
+  private case class RowForm(
+    author:  String,
+    content: String,
+    rating:  Rating
+  )
+
+  private val ratingMapping: Mapping[Rating] = number.transform(n => Rating(n.toDouble), _.value.toInt)
+
+  private val reviewForm: Form[RowForm] = Form(
+    mapping(
+      "author" -> nonEmptyText,
+      "content" -> nonEmptyText,
+      "rating" -> ratingMapping
+    )(RowForm.apply)(RowForm.unapply)
+  )
 
   def list(
     text:      Option[String],
@@ -42,6 +65,15 @@ class ProductController @Inject() (
     } yield {
       Ok(views.html.productDetails(product))
     }
+  }
+
+  def review(id: ProductId) = Secured.async { implicit request =>
+    reviewForm.bindFromRequest.fold(
+      e => Future.successful(BadRequest(e.errors.toString)),
+      reviewForm => reviewService.add(id, Review(reviewForm.author, reviewForm.content, reviewForm.rating, time.now())).map { _ =>
+        Redirect(routes.ProductController.details(id))
+      }
+    )
   }
 
 }

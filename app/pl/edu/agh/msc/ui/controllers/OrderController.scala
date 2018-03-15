@@ -25,13 +25,13 @@ class OrderController @Inject() (
 
   private val productIdMapping: Mapping[ProductId] = longNumber.transform(ProductId(_), _.value)
 
-  private val cartItem: Mapping[CartItem] = mapping(
+  private val cartItemMapping: Mapping[CartItem] = mapping(
     "product" -> productIdMapping,
     "amount" -> number
   )(CartItem.apply)(CartItem.unapply)
 
   private val cartMapping: Mapping[Cart] = mapping(
-    "items" -> seq(cartItem).verifying("Order must not be empty", _.nonEmpty)
+    "items" -> seq(cartItemMapping).verifying("Order must not be empty", _.nonEmpty)
   )(Cart.apply)(Cart.unapply)
 
   private val addressMapping: Mapping[Address] = mapping(

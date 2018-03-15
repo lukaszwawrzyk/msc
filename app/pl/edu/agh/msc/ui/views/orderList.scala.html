@@ -30,7 +30,7 @@
         @for(order <- orders) {
             <tr>
                 <td><a href="@routes.OrderController.view(order.id)">@order.id.value.toString.split("-").head</a></td>
-                <td>@order.date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))</td>
+                <td>@order.date.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))</td>
                 <td>@order.status match {
                     case OrderStatus.Unconfirmed => { unconfirmed }
                     case OrderStatus.Confirmed   => { awaiting payment }

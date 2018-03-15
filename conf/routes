@@ -11,18 +11,23 @@ POST        /signIn                          pl.edu.agh.msc.auth.controllers.Sig
 
 # landing page
 GET         /landing                         pl.edu.agh.msc.ui.controllers.LandingPageController.view
+
 # products
 GET         /products                        pl.edu.agh.msc.ui.controllers.ProductController.list(text: Option[String] ?= None, minPrice: Option[Int] ?= None, maxPrice: Option[Int] ?= None, minRating: Option[Int] ?= None, size: Option[Int] ?= None, page: Option[Int] ?= None)
 GET         /products/$id<[0-9]+>            pl.edu.agh.msc.ui.controllers.ProductController.details(id: ProductId)
+POST        /products/$id<[0-9]+>/review     pl.edu.agh.msc.ui.controllers.ProductController.review(id: ProductId)
+
 #cart
 GET         /cart                            pl.edu.agh.msc.ui.controllers.CartController.view
 POST        /cart/add/:productId             pl.edu.agh.msc.ui.controllers.CartController.add(productId: ProductId)
+
 #orders
 POST        /orders/draft                    pl.edu.agh.msc.ui.controllers.OrderController.draft
 GET         /orders/:id                      pl.edu.agh.msc.ui.controllers.OrderController.view(id: OrderId)
 POST        /orders/:id/confirm              pl.edu.agh.msc.ui.controllers.OrderController.confirm(id: OrderId)
 POST        /orders/:id/paid                 pl.edu.agh.msc.ui.controllers.OrderController.paid(id: OrderId)
 GET         /orders                          pl.edu.agh.msc.ui.controllers.OrderController.list()
+
 #payments
 GET         /payment/:id                     pl.edu.agh.msc.ui.controllers.PaymentController.view(id: PaymentId)
 POST        /payment/:id/pay                 pl.edu.agh.msc.ui.controllers.PaymentController.pay(id: PaymentId)
