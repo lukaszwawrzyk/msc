@@ -5,6 +5,7 @@
 @import play.api.mvc.RequestHeader
 @import play.twirl.api.Html
 @import pl.edu.agh.msc.auth.controllers.routes
+@import pl.edu.agh.msc.ui.controllers.{ routes => uiroutes }
 @(title: String, user: Option[User] = None)(content: Html)(implicit request: RequestHeader, messages: Messages, assets: AssetsFinder, webJarsUtil: WebJarsUtil)
 
 <!DOCTYPE html>
@@ -29,14 +30,12 @@
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <div class="navbar-nav mr-auto">
-                    <a class="nav-link" href="#">Link1</a>
-                    <a class="nav-link" href="#">Link1</a>
+                    <a class="nav-link" href="@uiroutes.ProductController.list().url">Products</a>
+                    @if(user.isDefined){
+                        <a class="nav-link" href="@uiroutes.OrderController.list()">Orders</a>
+                        <a class="nav-link" href="@uiroutes.CartController.view()">Cart</a>
+                    }
                 </div>
-                <form class="form-inline my-2 my-lg-0">
-                    <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-                </form>
-
                 <div class="navbar-nav navbar-right">
                     @user.map { u =>
                         <a class="nav-link" href="@routes.ApplicationController.profile">@u.fullName</a>

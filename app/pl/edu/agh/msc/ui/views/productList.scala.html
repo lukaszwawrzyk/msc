@@ -22,16 +22,16 @@
 
 @main(s"Simple Shop - Products", user) {
 
-    <form action="@routes.ProductController.list().url" method="get" id="search-form" class="text-center">
-        <div class="form-group form-inline">
-            <input type="text"   class="form-control" id="text"      name="text"      placeholder="What are you looking for?" @text.map  { v => value="@v" }.getOrElse { }>
-            <input type="number" class="form-control" id="minPrice"  name="minPrice"  placeholder="min price"  @minPrice.map  { v => value="@v" }.getOrElse { }>
-            <input type="number" class="form-control" id="maxPrice"  name="maxPrice"  placeholder="max price"  @maxPrice.map  { v => value="@v" }.getOrElse { }>
-            <input type="number" class="form-control" id="minRating" name="minRating" placeholder="min rating" @minRating.map { v => value="@v" }.getOrElse { }>
-            <input type="hidden" class="form-control" id="size"      name="size"      value="@paginated.pagination.size">
+    <form action="@routes.ProductController.list().url" method="get" id="search-form">
+        <div class="form-row align-items-center">
+            <div class="col-auto"><input type="text"   class="form-control" id="text"      name="text"      placeholder="What are you looking for?" @text.map  { v => value="@v" }.getOrElse { }></div>
+            <div class="col-auto"><input type="number" class="form-control" id="minPrice"  name="minPrice"  placeholder="min price"  @minPrice.map  { v => value="@v" }.getOrElse { }></div>
+            <div class="col-auto"><input type="number" class="form-control" id="maxPrice"  name="maxPrice"  placeholder="max price"  @maxPrice.map  { v => value="@v" }.getOrElse { }></div>
+            <div class="col-auto"><input type="number" class="form-control" id="minRating" name="minRating" placeholder="min rating" @minRating.map { v => value="@v" }.getOrElse { }></div>
+            <div class="col-auto"><input type="hidden" class="form-control" id="size"      name="size"      value="@paginated.pagination.size"></div>
         </div>
-        <div class="form-group">
-            <input type="submit" class="btn btn-lg btn-primary" value="Search">
+        <div class="form-row align-items-center">
+            <div class="col-auto"><input type="submit" class="btn btn-lg btn-primary" value="Search"></div>
         </div>
     </form>
     <script>

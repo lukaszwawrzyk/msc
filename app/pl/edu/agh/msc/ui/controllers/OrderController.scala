@@ -64,8 +64,14 @@ class OrderController @Inject() (
       order <- ordersService.find(id)
       products <- buildMap(order.items.map(_.product))(productService.findShort)
     } yield {
-      Ok(views.html.orderConfirmation(order, products))
+      Ok(views.html.orderDetails(order, products))
     }
+  }
+
+  def list() = Secured.async { implicit request =>
+    for {
+      orders <- ordersService.historical(request.identity.id)
+    } yield Ok(views.html.orderList(orders))
   }
 
   def confirm(id: OrderId) = Secured.async { implicit request =>

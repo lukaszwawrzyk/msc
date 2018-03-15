@@ -17,41 +17,44 @@
 
 @main(s"Simple Shop - Cart", user) {
 
-    <table class="table table-striped">
-        <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Amount</th>
-            <th>Price</th>
-        </tr>
-        @for(item <- cart.items) {
+    @if(cart.items.nonEmpty) {
+        <table class="table table-striped">
             <tr>
-                <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
-                <td>@products(item.product).name</td>
-                <td>@item.amount</td>
-                <td>@products(item.product).price.value.toString</td>
+                <th></th>
+                <th>Name</th>
+                <th>Amount</th>
+                <th>Price</th>
             </tr>
-        }
-    </table>
+            @for(item <- cart.items) {
+                <tr>
+                    <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
+                    <td>@products(item.product).name</td>
+                    <td>@item.amount</td>
+                    <td>@products(item.product).price.value.toString</td>
+                </tr>
+            }
+        </table>
 
-    <div class="row justify-content-center">
-        <div class="col-6">
-            <h3>Address</h3>
-            <form action="@routes.OrderController.draft()" method="post">
-                @CSRF.formField
-                <input type="text" class="form-control" id="fullName"      name="address.fullName"      placeholder="Full Name">
-                <input type="text" class="form-control" id="streetAddress" name="address.streetAddress" placeholder="Street Address">
-                <input type="text" class="form-control" id="zipCode"       name="address.zipCode"       placeholder="Zip Code">
-                <input type="text" class="form-control" id="city"          name="address.city"          placeholder="City">
-                <input type="text" class="form-control" id="country"       name="address.country"       placeholder="Country">
-                @for((items, index) <- cart.items.zipWithIndex) {
-                    <input type="hidden" id="cart.items[@index].product" name="cart.items[@index].product" value="@items.product.value">
-                    <input type="hidden" id="cart.items[@index].amount"  name="cart.items[@index].amount"  value="@items.amount">
-                }
-                <input type="submit" class="btn btn-lg btn-primary btn-block" value="Checkout">
-            </form>
+        <div class="row justify-content-center">
+            <div class="col-6">
+                <h3>Address</h3>
+                <form action="@routes.OrderController.draft()" method="post">
+                    @CSRF.formField
+                    <input type="text" class="form-control" id="fullName"      name="address.fullName"      placeholder="Full Name">
+                    <input type="text" class="form-control" id="streetAddress" name="address.streetAddress" placeholder="Street Address">
+                    <input type="text" class="form-control" id="zipCode"       name="address.zipCode"       placeholder="Zip Code">
+                    <input type="text" class="form-control" id="city"          name="address.city"          placeholder="City">
+                    <input type="text" class="form-control" id="country"       name="address.country"       placeholder="Country">
+                    @for((items, index) <- cart.items.zipWithIndex) {
+                        <input type="hidden" id="cart.items[@index].product" name="cart.items[@index].product" value="@items.product.value">
+                        <input type="hidden" id="cart.items[@index].amount"  name="cart.items[@index].amount"  value="@items.amount">
+                    }
+                    <input type="submit" class="btn btn-lg btn-primary btn-block" value="Checkout">
+                </form>
+            </div>
         </div>
-    </div>
-
+    } else {
+        <h2>Your cart is empty</h2>
+    }
 
 }

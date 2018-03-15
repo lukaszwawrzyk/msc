@@ -13,10 +13,12 @@
 @import java.time.format.{ DateTimeFormatter, FormatStyle }
 @import views.html.helper.CSRF
 
+@import pl.edu.agh.msc.orders.OrderStatus
 @(order: Order, products: Map[ProductId, ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main(s"Simple Shop - Order Confirmation", user) {
 
+    <h4><strong>Order #</strong> @order.id.value.toString.split("-").head</h4>
     <table class="table table-striped">
         <tr>
             <th></th>
@@ -45,10 +47,16 @@
                 <input type="text" class="form-control" value="@order.address.country"       disabled id="country"       name="address.country"       placeholder="Country">
             </form>
 
-            <form action="@routes.OrderController.confirm(order.id)" method="post">
-                @CSRF.formField
-                <button type="submit" class="btn btn-lg btn-primary btn-block">Confirm and Pay</button>
-            </form>
+            @if(order.status == OrderStatus.Unconfirmed) {
+                <form action="@routes.OrderController.confirm(order.id)" method="post">
+                    @CSRF.formField
+                    <button type="submit" class="btn btn-lg btn-primary btn-block">Confirm and Pay</button>
+                </form>
+            } else if (order.status == OrderStatus.Confirmed) {
+                <h4><strong>Status:</strong> awaiting payment</h4>
+            } else if (order.status == OrderStatus.Paid) {
+                <h4><strong>Status: </strong> paid</h4>
+            }
         </div>
     </div>
 
