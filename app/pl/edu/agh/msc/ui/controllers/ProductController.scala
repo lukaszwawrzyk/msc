@@ -49,7 +49,7 @@ class ProductController @Inject() (
     minRating: Option[Int],
     size:      Option[Int],
     page:      Option[Int]
-  ) = UserAware.async { implicit request =>
+  ) = UserAware { implicit request =>
     val filtering = Filtering(text, PriceRange(minPrice.map(Money(_)), maxPrice.map(Money(_))).some, minRating.map(r => Rating(r.toDouble)))
     val pagination = Pagination(size.getOrElse(DefaultPageSize), page.getOrElse(1))
     for {
@@ -59,7 +59,7 @@ class ProductController @Inject() (
     }
   }
 
-  def details(id: ProductId) = UserAware.async { implicit request =>
+  def details(id: ProductId) = UserAware { implicit request =>
     for {
       product <- productService.findDetailed(id)
     } yield {
@@ -67,7 +67,7 @@ class ProductController @Inject() (
     }
   }
 
-  def review(id: ProductId) = Secured.async { implicit request =>
+  def review(id: ProductId) = Secured { implicit request =>
     reviewForm.bindFromRequest.fold(
       e => Future.successful(BadRequest(e.errors.toString)),
       reviewForm => reviewService.add(id, Review(reviewForm.author, reviewForm.content, reviewForm.rating, time.now())).map { _ =>

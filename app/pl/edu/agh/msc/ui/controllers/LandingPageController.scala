@@ -20,7 +20,7 @@ class LandingPageController @Inject() (
 
   private val MaxReviews = 10
 
-  def view = UserAware.async { implicit request =>
+  def view = UserAware { implicit request =>
 
     for {
       recommendations <- request.identity

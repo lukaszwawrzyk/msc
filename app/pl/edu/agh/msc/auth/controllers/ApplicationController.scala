@@ -10,15 +10,15 @@ import scala.concurrent.Future
 class ApplicationController @Inject() (sc: SecuredController) {
   import sc._
 
-  def index = UserAware.async { implicit request =>
+  def index = UserAware { implicit request =>
     Future.successful(Redirect(pl.edu.agh.msc.ui.controllers.routes.LandingPageController.view()))
   }
 
-  def profile = Secured.async { implicit request =>
+  def profile = Secured { implicit request =>
     Future.successful(Ok(views.html.profile(request.identity)))
   }
 
-  def signOut = Secured.async { implicit request =>
+  def signOut = Secured { implicit request =>
     val result = Redirect(routes.ApplicationController.index())
     silhouette.env.eventBus.publish(LogoutEvent(request.identity, request))
     silhouette.env.authenticatorService.discard(request.authenticator, result)

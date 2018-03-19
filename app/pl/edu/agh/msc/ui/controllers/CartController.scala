@@ -19,7 +19,7 @@ class CartController @Inject() (
 
   import sc._
 
-  def view = Secured.async { implicit request =>
+  def view = Secured { implicit request =>
     for {
       cart <- cartService.get(request.identity.id)
       products <- buildMap(cart.items.map(_.product))(productService.findShort)
@@ -28,7 +28,7 @@ class CartController @Inject() (
     }
   }
 
-  def add(productId: ProductId) = Secured.async { implicit request =>
+  def add(productId: ProductId) = Secured { implicit request =>
     extractNumberField("amount") match {
       case Some(amount) =>
         for {

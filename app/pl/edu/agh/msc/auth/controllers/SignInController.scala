@@ -29,11 +29,11 @@ class SignInController @Inject() (
 
   import sc._
 
-  def view = Unsecured.async { implicit request =>
+  def view = Unsecured { implicit request =>
     Future.successful(Ok(views.html.signIn(SignInForm.form)))
   }
 
-  def submit = Unsecured.async { implicit request: Request[AnyContent] =>
+  def submit = Unsecured { implicit request =>
     SignInForm.form.bindFromRequest.fold(
       form => Future.successful(BadRequest(views.html.signIn(form))),
       data => {

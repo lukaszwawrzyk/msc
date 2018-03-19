@@ -14,7 +14,7 @@ class PaymentController @Inject() (
 ) {
   import sc._
 
-  def view(id: PaymentId) = UserAware.async { implicit request =>
+  def view(id: PaymentId) = UserAware { implicit request =>
     for {
       payment <- paymentService.get(id)
     } yield {
@@ -22,7 +22,7 @@ class PaymentController @Inject() (
     }
   }
 
-  def pay(id: PaymentId) = UserAware.async { implicit request =>
+  def pay(id: PaymentId) = UserAware { implicit request =>
     paymentService.pay(id)
     Future.successful(Redirect(routes.LandingPageController.view())
       .flashing("success" -> "Thank you for your payment"))

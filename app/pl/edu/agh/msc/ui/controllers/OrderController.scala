@@ -50,7 +50,7 @@ class OrderController @Inject() (
   )
 
 
-  def draft = Secured.async { implicit request =>
+  def draft = Secured { implicit request =>
     orderForm.bindFromRequest.fold(
       e => Future.successful(BadRequest(e.errors.toString)),
       orderDraft => ordersService.saveDraft(orderDraft, request.identity.id).map { id =>
@@ -59,7 +59,7 @@ class OrderController @Inject() (
     )
   }
 
-  def view(id: OrderId) = Secured.async { implicit request =>
+  def view(id: OrderId) = Secured { implicit request =>
     for {
       order <- ordersService.find(id)
       products <- buildMap(order.items.map(_.product))(productService.findShort)
@@ -68,13 +68,13 @@ class OrderController @Inject() (
     }
   }
 
-  def list() = Secured.async { implicit request =>
+  def list() = Secured { implicit request =>
     for {
       orders <- ordersService.historical(request.identity.id)
     } yield Ok(views.html.orderList(orders))
   }
 
-  def confirm(id: OrderId) = Secured.async { implicit request =>
+  def confirm(id: OrderId) = Secured { implicit request =>
     for {
       order <- ordersService.find(id)
       res <- if (order.buyer != request.identity.id) {
@@ -95,7 +95,7 @@ class OrderController @Inject() (
     } yield res
   }
 
-  def paid(id: OrderId) = UserAware.async { implicit request =>
+  def paid(id: OrderId) = UserAware { implicit request =>
     ordersService.paymentConfirmed(id).map(_ => Ok)
   }
 
