@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton class SecuredController @Inject() (
   components:     ControllerComponents,
-  silhouette:     Silhouette[DefaultEnv],
+  val silhouette:     Silhouette[DefaultEnv],
 )(
   implicit
   val webJarsUtil: WebJarsUtil,

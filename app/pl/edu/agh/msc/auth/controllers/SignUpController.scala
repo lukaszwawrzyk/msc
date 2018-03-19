@@ -1,43 +1,36 @@
 package pl.edu.agh.msc.auth.controllers
 
 import java.util.UUID
-import javax.inject.Inject
 
-import _root_.controllers.AssetsFinder
 import com.mohiva.play.silhouette.api._
 import com.mohiva.play.silhouette.api.repositories.AuthInfoRepository
 import com.mohiva.play.silhouette.api.util.PasswordHasherRegistry
 import com.mohiva.play.silhouette.impl.providers._
-import pl.edu.agh.msc.auth.token.AuthTokenService
-import pl.edu.agh.msc.auth.user.{ User, UserService }
-import org.webjars.play.WebJarsUtil
+import javax.inject.Inject
 import pl.edu.agh.msc.auth._
 import pl.edu.agh.msc.auth.controllers.forms.SignUpForm
-import pl.edu.agh.msc.auth.infra.DefaultEnv
-import play.api.i18n.{ I18nSupport, Messages }
-import play.api.mvc.{ AbstractController, AnyContent, ControllerComponents, Request }
+import pl.edu.agh.msc.auth.token.AuthTokenService
+import pl.edu.agh.msc.auth.user.{ User, UserService }
+import pl.edu.agh.msc.utils.SecuredController
+import play.api.i18n.Messages
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 
 class SignUpController @Inject() (
-  components:             ControllerComponents,
-  silhouette:             Silhouette[DefaultEnv],
+  sc:                     SecuredController,
   userService:            UserService,
   authInfoRepository:     AuthInfoRepository,
   authTokenService:       AuthTokenService,
   passwordHasherRegistry: PasswordHasherRegistry
-)(
-  implicit
-  webJarsUtil: WebJarsUtil,
-  assets:      AssetsFinder,
-  ex:          ExecutionContext
-) extends AbstractController(components) with I18nSupport {
+) {
 
-  def view = silhouette.UnsecuredAction { implicit request =>
-    Ok(views.html.signUp(SignUpForm.form))
+  import sc._
+
+  def view = Unsecured.async { implicit request =>
+    Future.successful(Ok(views.html.signUp(SignUpForm.form)))
   }
 
-  def submit = silhouette.UnsecuredAction.async { implicit request =>
+  def submit = Unsecured.async { implicit request =>
     SignUpForm.form.bindFromRequest.fold(
       form => Future.successful(BadRequest(views.html.signUp(form))),
       data => {
