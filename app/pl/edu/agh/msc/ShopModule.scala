@@ -10,8 +10,15 @@ class ShopModule extends AbstractModule with ScalaModule {
   override def configure(): Unit = {
     bind[Time].toInstance(new RealTime)
     bind[NotificationService].to[WSNotificationService].asEagerSingleton
-    bind[InitDb].asEagerSingleton
     bind[SecuredController].to[AsyncSecuredController]
+  }
+
+}
+
+class InitModule extends AbstractModule with ScalaModule {
+
+  override def configure(): Unit = {
+    bind[InitDb].asEagerSingleton
   }
 
 }

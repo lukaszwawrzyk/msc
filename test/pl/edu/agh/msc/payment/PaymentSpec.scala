@@ -53,8 +53,8 @@ class PaymentSpec extends IntegrationTest with OrderFactories {
     }
   }
 
-  override def fakeApplication(): Application = {
-    new GuiceApplicationBuilder().overrides(bind[NotificationService].toInstance(mockNotificationService)).build()
+  override protected def configureApp(builder: GuiceApplicationBuilder): GuiceApplicationBuilder = {
+    builder.overrides(bind[NotificationService].toInstance(mockNotificationService))
   }
 
 }

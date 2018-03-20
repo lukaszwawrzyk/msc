@@ -141,6 +141,7 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
     def set(v: LocalDateTime): Unit = { t = v }
   }
 
-  override def fakeApplication(): Application = new GuiceApplicationBuilder().overrides(bind[Time].toInstance(time)).build()
+  override protected def configureApp(builder: GuiceApplicationBuilder): GuiceApplicationBuilder =
+    builder.overrides(bind[Time].toInstance(time))
 
 }

@@ -1,10 +1,14 @@
 package pl.edu.agh.msc.common
 
+import com.google.inject.Module
 import org.scalatest._
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import pl.edu.agh.msc.InitModule
+import play.api.{ Application, Configuration, Environment }
 import play.api.db.DBApi
 import play.api.db.evolutions.Evolutions
 import play.api.db.slick.DatabaseConfigProvider
+import play.api.inject.guice.{ BinderOption, GuiceApplicationBuilder, GuiceableModule }
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.duration.Duration
@@ -12,6 +16,15 @@ import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.reflect.ClassTag
 
 sealed trait DatabasePreparation extends GuiceOneAppPerSuite with Awaiting with BeforeAndAfter { this: TestSuite =>
+
+  protected def configureApp(app: GuiceApplicationBuilder): GuiceApplicationBuilder = app
+
+  override def fakeApplication(): Application = {
+    val baseConfig = new GuiceApplicationBuilder()
+      .configure("slick.dbs.default.db.url" -> "jdbc:postgresql://localhost:5432/msc-test")
+      .disable[InitModule]
+    configureApp(baseConfig).build()
+  }
 
   before {
     prepareDbForTest()
@@ -22,15 +35,16 @@ sealed trait DatabasePreparation extends GuiceOneAppPerSuite with Awaiting with 
     applyEvolutions()
   }
 
-  private def applyEvolutions() {
-    Evolutions.applyEvolutions(app.injector.instanceOf[DBApi].database("default"))
-  }
-
   private def cleanDb() = {
     val dbConfig = app.injector.instanceOf[DatabaseConfigProvider].get[JdbcProfile]
     import dbConfig._
     import dbConfig.profile.api._
-    db.run(sql"DROP ALL OBJECTS".as[Int]).await()
+    db.run(sql"drop schema public cascade".as[Int]).await()
+    db.run(sql"create schema public".as[Int]).await()
+  }
+
+  private def applyEvolutions() {
+    Evolutions.applyEvolutions(app.injector.instanceOf[DBApi].database("default"))
   }
 
 }

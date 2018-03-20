@@ -14,6 +14,4 @@ trait SlickTypeMappings {
 
   protected implicit lazy val localDateTimeMapping = MappedColumnType.base[LocalDateTime, Timestamp](Timestamp.valueOf, _.toLocalDateTime)
 
-  protected implicit lazy val uuidMapping = MappedColumnType.base[UUID, String](_.toString, UUID.fromString)
-
 }
