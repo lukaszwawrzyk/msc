@@ -1,10 +1,9 @@
 package pl.edu.agh.msc.utils
 
-import javax.inject.{ Inject, Singleton }
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.actions.{ SecuredRequest, UserAwareRequest }
 import controllers.AssetsFinder
-import org.webjars.play.WebJarsUtil
+import javax.inject.Inject
 import pl.edu.agh.msc.auth.infra.DefaultEnv
 import pl.edu.agh.msc.auth.user.User
 import play.api.i18n.I18nSupport
@@ -18,9 +17,8 @@ abstract class SecuredController(
   val silhouette: Silhouette[DefaultEnv]
 )(
   implicit
-  val webJarsUtil: WebJarsUtil,
-  val assets:      AssetsFinder,
-  val ec:          ExecutionContext
+  val assets: AssetsFinder,
+  val ec:     ExecutionContext
 ) extends AbstractController(components) with I18nSupport {
 
   type UserReq = SecuredRequest[DefaultEnv, AnyContent]
@@ -43,12 +41,11 @@ abstract class SecuredController(
 }
 
 class AsyncSecuredController @Inject() (
-  components:  ControllerComponents,
-  silhouette:  Silhouette[DefaultEnv],
-  webJarsUtil: WebJarsUtil,
-  assets:      AssetsFinder,
-  ec:          ExecutionContext
-) extends SecuredController(components, silhouette)(webJarsUtil, assets, ec) {
+  components: ControllerComponents,
+  silhouette: Silhouette[DefaultEnv],
+  assets:     AssetsFinder,
+  ec:         ExecutionContext
+) extends SecuredController(components, silhouette)(assets, ec) {
 
   override def Secured(block: UserReq => Res): Action[AnyContent] = silhouette.SecuredAction.async(block)
   override def UserAware(block: MaybeUserReq => Res): Action[AnyContent] = silhouette.UserAwareAction.async(block)
@@ -58,12 +55,11 @@ class AsyncSecuredController @Inject() (
 
 // likely not feasible solution, can cause deadlocks
 class BlockingSecuredController @Inject() (
-  components:  ControllerComponents,
-  silhouette:  Silhouette[DefaultEnv],
-  webJarsUtil: WebJarsUtil,
-  assets:      AssetsFinder,
-  ec:          ExecutionContext
-) extends SecuredController(components, silhouette)(webJarsUtil, assets, ec) {
+  components: ControllerComponents,
+  silhouette: Silhouette[DefaultEnv],
+  assets:     AssetsFinder,
+  ec:         ExecutionContext
+) extends SecuredController(components, silhouette)(assets, ec) {
 
   override def Secured(block: UserReq => Res): Action[AnyContent] = silhouette.SecuredAction.async(blocking(block))
   override def UserAware(block: MaybeUserReq => Res): Action[AnyContent] = silhouette.UserAwareAction.async(blocking(block))

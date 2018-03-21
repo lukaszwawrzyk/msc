@@ -50,6 +50,15 @@ create table "auth_tokens" (
   FOREIGN KEY ("user_id") REFERENCES "users"("id")
 );
 
+create table "passwords" (
+  "provider_id" VARCHAR NOT NULL,
+  "provider_key" VARCHAR NOT NULL,
+  "hasher" VARCHAR NOT NULL,
+  "password" VARCHAR NOT NULL,
+  "salt" VARCHAR,
+  PRIMARY KEY ("provider_id", "provider_key")
+);
+
 create table "orders" (
   "status" INT NOT NULL,
   "user_id" UUID NOT NULL,
@@ -108,6 +117,7 @@ drop table "payments";
 drop table "cart_items";
 drop table "line_items";
 drop table "orders";
+drop table "passwords";
 drop table "auth_tokens";
 drop table "users";
 drop table "availability";

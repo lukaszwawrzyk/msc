@@ -1,5 +1,4 @@
 @import _root_.controllers.AssetsFinder
-@import org.webjars.play.WebJarsUtil
 @import pl.edu.agh.msc.auth.user.User
 @import pl.edu.agh.msc.auth.views.html.main
 @import pl.edu.agh.msc.products.{ Paginated, ProductShort }
@@ -14,7 +13,7 @@
   minPrice:  Option[Int],
   maxPrice:  Option[Int],
   minRating: Option[Int]
-)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+)(implicit user: Option[User], request: RequestHeader, messages: Messages, assets: AssetsFinder)
 
 @main(s"Simple Shop - Products", user) {
 

@@ -35,9 +35,6 @@ libraryDependencies ++= Seq(
   "com.mohiva"             %% "play-silhouette-persistence"     % "5.0.0",
   "com.mohiva"             %% "play-silhouette-crypto-jca"      % "5.0.0",
 
-  "org.webjars"            %% "webjars-play"                    % "2.6.1",
-  "org.webjars"            %  "bootstrap"                       % "4.0.0" exclude("org.webjars", "jquery"),
-  "org.webjars"            %  "jquery"                          % "3.2.1",
   "net.codingwell"         %% "scala-guice"                     % "4.1.0",
   "com.iheart"             %% "ficus"                           % "1.4.1",
   "com.enragedginger"      %% "akka-quartz-scheduler"           % "1.6.1-akka-2.5.x",
@@ -58,6 +55,8 @@ libraryDependencies ++= Seq(
 
 
 enablePlugins(PlayScala)
+enablePlugins(SbtWeb)
+enablePlugins(LauncherJarPlugin)
 
 routesGenerator := InjectedRoutesGenerator
 routesImport ++= Seq(
@@ -67,6 +66,11 @@ routesImport ++= Seq(
   "pl.edu.agh.msc.payment.PaymentId",
 )
 TwirlKeys.templateImports := Seq()
+
+pipelineStages := Seq(gzip)
+
+sources in (Compile,doc) := Seq.empty
+publishArtifact in (Compile, packageDoc) := false
 
 parallelExecution in Test := false
 

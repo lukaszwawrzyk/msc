@@ -1,5 +1,4 @@
 @import _root_.controllers.AssetsFinder
-@import org.webjars.play.WebJarsUtil
 @import pl.edu.agh.msc.auth.user.User
 @import pl.edu.agh.msc.auth.views.html.main
 @import pl.edu.agh.msc.payment.{ PaymentId, PaymentRequest }
@@ -7,7 +6,7 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
 
-@(payment: PaymentRequest, id: PaymentId)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+@(payment: PaymentRequest, id: PaymentId)(implicit user: Option[User], request: RequestHeader, messages: Messages, assets: AssetsFinder)
 
 @main("Payment", user) {
     <div class="container">

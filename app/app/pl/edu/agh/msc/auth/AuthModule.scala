@@ -21,6 +21,7 @@ import net.codingwell.scalaguice.ScalaModule
 import pl.edu.agh.msc.auth.controllers.handlers.{ CustomSecuredErrorHandler, CustomUnsecuredErrorHandler }
 import pl.edu.agh.msc.auth.infra.DefaultEnv
 import pl.edu.agh.msc.auth.jobs.{ AuthTokenCleaner, Scheduler }
+import pl.edu.agh.msc.auth.passwords.PasswordRepository
 import pl.edu.agh.msc.auth.token.AuthTokenService
 import pl.edu.agh.msc.auth.user.{ UserRepository, UserService }
 import play.api.Configuration
@@ -33,18 +34,18 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
   def configure(): Unit = {
-    bind[UserRepository].asEagerSingleton()
-    bind[AuthTokenService].asEagerSingleton()
-    bind[UserService].asEagerSingleton()
-    bind[DelegableAuthInfoDAO[PasswordInfo]].toInstance(new InMemoryAuthInfoDAO[PasswordInfo])
+    bind[UserRepository].asEagerSingleton
+    bind[AuthTokenService].asEagerSingleton
+    bind[UserService].asEagerSingleton
+    bind[DelegableAuthInfoDAO[PasswordInfo]].to[PasswordRepository].asEagerSingleton
 
     bindActor[AuthTokenCleaner]("auth-token-cleaner")
-    bind[Scheduler].asEagerSingleton()
+    bind[Scheduler].asEagerSingleton
 
-    bind[Silhouette[DefaultEnv]].to[SilhouetteProvider[DefaultEnv]].asEagerSingleton()
-    bind[UnsecuredErrorHandler].to[CustomUnsecuredErrorHandler].asEagerSingleton()
-    bind[SecuredErrorHandler].to[CustomSecuredErrorHandler].asEagerSingleton()
-    bind[CacheLayer].to[PlayCacheLayer].asEagerSingleton()
+    bind[Silhouette[DefaultEnv]].to[SilhouetteProvider[DefaultEnv]].asEagerSingleton
+    bind[UnsecuredErrorHandler].to[CustomUnsecuredErrorHandler].asEagerSingleton
+    bind[SecuredErrorHandler].to[CustomSecuredErrorHandler].asEagerSingleton
+    bind[CacheLayer].to[PlayCacheLayer].asEagerSingleton
     bind[IDGenerator].toInstance(new SecureRandomIDGenerator())
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
     bind[EventBus].toInstance(EventBus())

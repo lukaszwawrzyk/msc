@@ -1,7 +1,6 @@
 @import java.time.format.{ DateTimeFormatter, FormatStyle }
 
 @import _root_.controllers.AssetsFinder
-@import org.webjars.play.WebJarsUtil
 @import pl.edu.agh.msc.auth.user.User
 @import pl.edu.agh.msc.auth.views.html.main
 @import pl.edu.agh.msc.availability.Availability
@@ -12,7 +11,7 @@
 @import play.api.mvc.RequestHeader
 @import play.twirl.api.Html
 
-@(product: ProductDetails, recommendations: Seq[ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+@(product: ProductDetails, recommendations: Seq[ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, assets: AssetsFinder)
 
 @main(s"Simple Shop - ${product.name}", user) {
 

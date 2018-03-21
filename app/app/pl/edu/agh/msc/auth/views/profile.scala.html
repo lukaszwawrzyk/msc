@@ -1,9 +1,8 @@
 @import _root_.controllers.AssetsFinder
 @import pl.edu.agh.msc.auth.user.User
-@import org.webjars.play.WebJarsUtil
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
-@(user: User)(implicit request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+@(user: User)(implicit request: RequestHeader, messages: Messages, assets: AssetsFinder)
 
 @main(messages("home.title"), Some(user)) {
     <div class="row justify-content-center">

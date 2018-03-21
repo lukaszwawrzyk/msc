@@ -3,13 +3,12 @@
 @import views.html.helper
 @import controllers.AssetsFinder
 @import pl.edu.agh.msc.auth.controllers.forms.SignUpForm.Data
-@import org.webjars.play.WebJarsUtil
 @import play.api.data.Form
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
 @import pl.edu.agh.msc.auth.controllers.routes
 
-@(signUpForm: Form[Data])(implicit request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+@(signUpForm: Form[Data])(implicit request: RequestHeader, messages: Messages, assets: AssetsFinder)
 
 @main(messages("sign.up.title")) {
     <div class="row justify-content-center">

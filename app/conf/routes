@@ -34,4 +34,3 @@ POST        /payment/:id/pay                 pl.edu.agh.msc.ui.controllers.Payme
 
 # common
 GET         /assets/*file                    controllers.Assets.versioned(file)
-->          /webjars                         webjars.Routes
