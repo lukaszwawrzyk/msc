@@ -7,7 +7,6 @@
 @import pl.edu.agh.msc.ui.controllers.routes
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
-@import views.html.helper.CSRF
 @(order: Order, products: Map[ProductId, ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main(s"Simple Shop - Order Confirmation", user) {
@@ -43,7 +42,6 @@
 
             @if(order.status == OrderStatus.Unconfirmed) {
                 <form action="@routes.OrderController.confirm(order.id)" method="post">
-                    @CSRF.formField
                     <button type="submit" class="btn btn-lg btn-primary btn-block">Confirm and Pay</button>
                 </form>
             } else if (order.status == OrderStatus.Confirmed) {

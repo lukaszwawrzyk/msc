@@ -16,7 +16,6 @@
         <fieldset class="col-6">
             <legend>@messages("sign.in.credentials")</legend>
             @helper.form(action = routes.SignInController.submit()) {
-                @helper.CSRF.formField
                 @b3.email(signInForm("email"), '_hiddenLabel -> messages("email"), 'placeholder -> messages("email"), 'class -> "form-control input-lg")
                 @b3.password(signInForm("password"), '_hiddenLabel -> messages("password"), 'placeholder -> messages("password"), 'class -> "form-control input-lg")
                 @b3.checkbox(signInForm("rememberMe"), '_text -> messages("remember.me"), 'checked -> true)

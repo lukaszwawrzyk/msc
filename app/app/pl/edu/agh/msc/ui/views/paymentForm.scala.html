@@ -6,7 +6,6 @@
 @import pl.edu.agh.msc.ui.controllers.routes
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
-@import views.html.helper.CSRF
 
 @(payment: PaymentRequest, id: PaymentId)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
@@ -60,7 +59,6 @@
                         </div>
                         <hr>
                         <form action="@routes.PaymentController.pay(id)" method="post" novalidate="novalidate">
-                            @CSRF.formField
                             <div class="form-group text-center">
                                 <ul class="list-inline">
                                     <li class="list-inline-item"><i class="text-muted fa fa-cc-visa fa-2x"></i></li>

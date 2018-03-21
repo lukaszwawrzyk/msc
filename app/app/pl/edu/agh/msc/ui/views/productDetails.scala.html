@@ -11,7 +11,6 @@
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
 @import play.twirl.api.Html
-@import views.html.helper.CSRF
 
 @(product: ProductDetails, recommendations: Seq[ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
@@ -59,7 +58,6 @@
                     @if(user.isDefined) {
                         <li>
                             <form action="@routes.CartController.add(product.id)" method="post" class="form-inline">
-                                @CSRF.formField
                                 <input type="number" class="form-control" id="amount" name="amount" placeholder="amount" value="1">
                                 <button type="submit" class="btn btn-primary btn-lg"> Add to Cart </button>
                             </form>
@@ -117,7 +115,6 @@
     }
     <h4 style="text-align: center" class="mt-5 mb-2">Your review</h4>
     <form action="@routes.ProductController.review(product.id)" method="post" class="mb-5">
-        @CSRF.formField
         <input type="text" class="form-control" id="author" name="author" placeholder="Name or nick" value="@user.flatMap(_.fullName).getOrElse { }">
         <input type="number" class="form-control" id="rating" name="rating" min="1" max="5" value="5">
         <textarea class="form-control" id="content" name="content" placeholder="Review" rows="5"></textarea>

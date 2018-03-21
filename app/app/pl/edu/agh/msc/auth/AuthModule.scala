@@ -11,19 +11,18 @@ import com.mohiva.play.silhouette.api.{ Environment, EventBus, Silhouette, Silho
 import com.mohiva.play.silhouette.crypto.{ JcaCrypter, JcaCrypterSettings, JcaSigner, JcaSignerSettings }
 import com.mohiva.play.silhouette.impl.authenticators._
 import com.mohiva.play.silhouette.impl.providers._
-import com.mohiva.play.silhouette.impl.providers.state.{ CsrfStateItemHandler, CsrfStateSettings }
 import com.mohiva.play.silhouette.impl.util._
 import com.mohiva.play.silhouette.password.{ BCryptPasswordHasher, BCryptSha256PasswordHasher }
 import com.mohiva.play.silhouette.persistence.daos.{ DelegableAuthInfoDAO, InMemoryAuthInfoDAO }
 import com.mohiva.play.silhouette.persistence.repositories.DelegableAuthInfoRepository
-import pl.edu.agh.msc.auth.token.{ AuthTokenRepository, AuthTokenService }
-import pl.edu.agh.msc.auth.user.{ UserRepository, UserService }
 import net.ceedubs.ficus.Ficus._
 import net.ceedubs.ficus.readers.ArbitraryTypeReader._
 import net.codingwell.scalaguice.ScalaModule
 import pl.edu.agh.msc.auth.controllers.handlers.{ CustomSecuredErrorHandler, CustomUnsecuredErrorHandler }
 import pl.edu.agh.msc.auth.infra.DefaultEnv
 import pl.edu.agh.msc.auth.jobs.{ AuthTokenCleaner, Scheduler }
+import pl.edu.agh.msc.auth.token.AuthTokenService
+import pl.edu.agh.msc.auth.user.{ UserRepository, UserService }
 import play.api.Configuration
 import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.ws.WSClient
@@ -69,13 +68,6 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
     )
   }
 
-  @Provides @Named("csrf-state-item-signer")
-  def provideCSRFStateItemSigner(configuration: Configuration): Signer = {
-    val config = configuration.underlying.as[JcaSignerSettings]("silhouette.csrfStateItemHandler.signer")
-
-    new JcaSigner(config)
-  }
-
   @Provides @Named("authenticator-signer")
   def provideAuthenticatorSigner(configuration: Configuration): Signer = {
     val config = configuration.underlying.as[JcaSignerSettings]("silhouette.authenticator.signer")
@@ -109,16 +101,6 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
     val authenticatorEncoder = new CrypterAuthenticatorEncoder(crypter)
 
     new CookieAuthenticatorService(config, None, signer, cookieHeaderEncoding, authenticatorEncoder, fingerprintGenerator, idGenerator, clock)
-  }
-
-  @Provides
-  def provideCsrfStateItemHandler(
-    idGenerator:                             IDGenerator,
-    @Named("csrf-state-item-signer") signer: Signer,
-    configuration:                           Configuration
-  ): CsrfStateItemHandler = {
-    val settings = configuration.underlying.as[CsrfStateSettings]("silhouette.csrfStateItemHandler")
-    new CsrfStateItemHandler(settings, idGenerator, signer)
   }
 
   @Provides
