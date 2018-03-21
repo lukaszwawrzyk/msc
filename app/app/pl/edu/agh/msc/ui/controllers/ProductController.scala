@@ -1,12 +1,13 @@
 package pl.edu.agh.msc.ui.controllers
 
 import java.time.LocalDateTime
-import javax.inject.Inject
 
+import javax.inject.Inject
 import cats.syntax.option._
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.products.{ Filtering, Pagination, ProductId, ProductService }
+import pl.edu.agh.msc.recommendation.RecommendationService
 import pl.edu.agh.msc.review.{ Rating, Review, ReviewService }
 import pl.edu.agh.msc.ui.views
 import pl.edu.agh.msc.utils.{ SecuredController, Time }
@@ -16,10 +17,11 @@ import play.api.data.{ Form, Mapping }
 import scala.concurrent.Future
 
 class ProductController @Inject() (
-  sc:             SecuredController,
-  productService: ProductService,
-  reviewService:  ReviewService,
-  time:           Time
+  sc:                    SecuredController,
+  productService:        ProductService,
+  reviewService:         ReviewService,
+  recommendationService: RecommendationService,
+  time:                  Time
 ) {
 
   import sc._
@@ -62,8 +64,9 @@ class ProductController @Inject() (
   def details(id: ProductId) = UserAware { implicit request =>
     for {
       product <- productService.findDetailed(id)
+      recommedations <- recommendationService.forProduct(id, max = 4)
     } yield {
-      Ok(views.html.productDetails(product))
+      Ok(views.html.productDetails(product, recommedations))
     }
   }
 

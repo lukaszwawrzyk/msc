@@ -27,11 +27,11 @@ import scala.util.Random
     findDefaultProducts.map(_.data)
   }
 
-  def forProduct(productId: ProductId)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
+  def forProduct(productId: ProductId, max: Int)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
     for {
-      product <- productService.findDetailed(productId)
+      product <- productService.findShort(productId)
       words = wordsInName(product).take(MaxWords)
-      recommendations <- forWords(words)
+      recommendations <- forWords(words, excluding = Set(productId), max)
     } yield recommendations
   }
 
@@ -40,40 +40,43 @@ import scala.util.Random
       recentProducts <- recentlyOrdered(userId)
       allWords = recentProducts.flatMap(wordsInName)
       randomWords = Random.shuffle(allWords).take(MaxWords)
-      recommendations <- forWords(randomWords)
+      recommendations <- forWords(randomWords, excluding = recentProducts.map(_.id).toSet)
     } yield recommendations
   }
 
-  private def recentlyOrdered(userId: UUID)(implicit ec: ExecutionContext): Future[Seq[ProductDetails]] = {
+  private def recentlyOrdered(userId: UUID)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
     for {
       orders <- ordersService.historical(userId)
       recentProductIds = orders.flatMap(_.items).map(_.product).take(MaxRecentProducts)
-      recentProducts <- Future.traverse(recentProductIds)(productService.findDetailed)
+      recentProducts <- Future.traverse(recentProductIds)(productService.findShort)
     } yield recentProducts
   }
 
-  private def forWords(words: Seq[String])(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
+  private def forWords(words: Seq[String], excluding: Set[ProductId], max: Int = MaxRecommendations)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
     for {
-      recommended <- Future.traverse(words)(findSimilarProducts)
+      recommended <- Future.traverse(words)(findSimilarProducts(_, max))
       backup <- findDefaultProducts
     } yield {
-      (recommended.flatMap(_.data).sortBy(_.averageRating).reverse ++ backup.data).take(MaxRecommendations)
+      (recommended.flatMap(_.data).sortBy(_.averageRating).reverse ++ backup.data)
+        .distinct
+        .filterNot(p => excluding.contains(p.id))
+        .take(max)
     }
   }
 
-  private def findSimilarProducts(word: String)(implicit ec: ExecutionContext): Future[Paginated[ProductShort]] = {
+  private def findSimilarProducts(word: String, max: Int)(implicit ec: ExecutionContext): Future[Paginated[ProductShort]] = {
     val filtering = Filtering(text      = word.some, minRating = MinRating.some)
-    productService.list(filtering, firstPage)
+    productService.list(filtering, firstPage(max))
   }
 
   private def findDefaultProducts(implicit ec: ExecutionContext) = {
-    productService.list(Filtering(minRating = MinRating.some), firstPage)
+    productService.list(Filtering(minRating = MinRating.some), firstPage(MaxRecommendations))
   }
 
-  private def wordsInName(product: ProductDetails) = {
+  private def wordsInName(product: ProductShort) = {
     product.name.split(" ").toSeq
   }
 
-  private val firstPage = Pagination(size = MaxRecommendations, page = 1)
+  private def firstPage(size: Int) = Pagination(size = size, page = 1)
 
 }

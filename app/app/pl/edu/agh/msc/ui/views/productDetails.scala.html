@@ -6,13 +6,13 @@
 @import org.webjars.play.WebJarsUtil
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
-@import pl.edu.agh.msc.products.ProductDetails
+@import pl.edu.agh.msc.products.{ ProductDetails, ProductShort }
 @import pl.edu.agh.msc.review.Rating
 @import pl.edu.agh.msc.availability.Availability
 @import java.time.format.{ DateTimeFormatter, FormatStyle }
 @import views.html.helper.CSRF
 
-@(product: ProductDetails)(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
+@(product: ProductDetails, recommendations: Seq[ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main(s"Simple Shop - ${product.name}", user) {
 
@@ -68,6 +68,30 @@
             </td>
         </tr>
     </table>
+
+    <h1>Recommended Products</h1>
+    <div class="row">
+        @for(product <- recommendations) {
+            <div class="col-auto">
+                <ul>
+                    <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                    <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
+                    <li>$@product.price.value.toString</li>
+                    <li>
+                    @product.averageRating match {
+                        case None => { }
+                        case Some(Rating(rating)) => {
+                            <div class="my-tooltip">
+                                @{(1 to BigDecimal(rating).setScale(0, BigDecimal.RoundingMode.HALF_UP).toInt).map(_ => "⭐").mkString}
+                            <span class="tooltiptext">@rating.formatted("%.1f")</span>
+                            </div>
+                        }
+                    }
+                    </li>
+                </ul>
+            </div>
+        }
+    </div>
 
     <h3 style="text-align: center">Reviews</h3>
     @for(review <- product.reviews) {
