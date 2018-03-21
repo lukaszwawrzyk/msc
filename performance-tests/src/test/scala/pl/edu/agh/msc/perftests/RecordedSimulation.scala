@@ -1,7 +1,12 @@
 package pl.edu.agh.msc.perftests
 
+import java.util.concurrent.ThreadLocalRandom
+
+import com.github.javafaker.Faker
+
 import scala.concurrent.duration._
 import io.gatling.core.Predef._
+import io.gatling.core.structure.ChainBuilder
 import io.gatling.http.Predef._
 import io.gatling.jdbc.Predef._
 
@@ -26,52 +31,99 @@ class RecordedSimulation extends Simulation {
 		"Upgrade-Insecure-Requests" -> "1"
   )
 
+  class Random {
+    private val jrandom = new ThreadLocalRandom(System.currentTimeMillis())
+    private val lastProductId = 1000
+    private val random = new scala.util.Random(jrandom)
+    val fake = new Faker(jrandom)
+    def range(from: Int, to: Int): Int = fake.random.nextInt(to - from) + from
+    def productId() = range(1, lastProductId)
+    def gaussian() = random.nextGaussian()
+  }
+
+  val random = new Random
+
   val userFeeder = Iterator.continually(
-    Map("email" -> (Random.alphanumeric.take(20).mkString + "@foo.com"))
+    Map(
+      "email" -> random.fake.internet.emailAddress(),
+      "password" -> random.fake.internet.password(),
+      "firstName" -> random.fake.name.firstName(),
+      "lastName" -> random.fake.name.lastName(),
+      "productsToBuy" -> Seq.fill(1 + math.max(0, random.gaussian()).toInt)(random.productId()),
+      "streetAddress" -> random.fake.address.streetAddress(),
+      "zipCode" -> random.fake.address.zipCode(),
+      "city" -> random.fake.address.city(),
+      "country" -> random.fake.address.country(),
+      "cardNumber" -> random.fake.business.creditCardNumber(),
+      "cardExpiry" -> random.fake.business.creditCardExpiry(),
+      "cardExpiry" -> random.range(100, 999)
+    )
   )
 
-	val buyingScenario = scenario("Buying Scenario")
-		.exec(http("show signup form")
-			.get("/signUp")
-			.headers(getHeaders))
-		.pause(15)
-		.exec(http("post signup form")
-			.post("/signUp")
-			.headers(postHeaders)
-			.formParam("firstName", "John")
-			.formParam("lastName", "Doe")
-			.formParam("email", "john.doe@gmail.com")
-			.formParam("password", "john"))
-		.pause(12)
-		.exec(http("request_2")
-			.post("/signIn")
-			.headers(postHeaders)
-			.formParam("email", "john.doe@gmail.com")
-			.formParam("password", "john")
-			.formParam("rememberMe", "true"))
-		.pause(25)
-		.exec(http("request_3")
-			.get("/products/123")
-			.headers(getHeaders))
-		.pause(4)
-		.exec(http("request_4")
-			.post("/cart/add/123")
-			.headers(postHeaders)
-			.formParam("amount", "1"))
-		.pause(3)
-		.exec(http("request_5")
-			.get("/products/169")
-			.headers(getHeaders))
-		.pause(2)
-		.exec(http("request_6")
-			.post("/cart/add/169")
-			.headers(postHeaders)
-			.formParam("amount", "1"))
-		.pause(1)
+  def get(name: String, uri: String) = http(name).get(uri).headers(getHeaders)
+  def post(name: String, uri: String) = http(name).post(uri).headers(postHeaders)
+
+  val signUp =
+     exec(get("show signup form", "/signUp"))
+    .exec(get("post signup form", "/signUp")
+      .formParam("firstName", "${firstName}")
+      .formParam("lastName", "${lastName}")
+      .formParam("email", "${email}")
+      .formParam("password", "${password}"))
+
+  val signIn = exec(post("post sign in form", "/signIn")
+      .headers(postHeaders)
+      .formParam("email", "${email}")
+      .formParam("password", "${password}")
+      .formParam("rememberMe", "true"))
+
+  def addToCart(productSessionKey: String) = {
+    exec(get("show main product", s"/products/$${$productSessionKey}"))
+   .exec(post("add main product to cart", s"/cart/add/$${$productSessionKey}")
+      .formParam("amount", "1"))
+  }
+
+  // todo add pause
+
+  val addProductsToCart = foreach("productsToBuy", "productToBuy")(addToCart("productToBuy"))
+
+  val placeOrder = exec(get("open cart", "/cart"))
+    .exec { session =>
+      val products = session("productsToBuy").as[Seq[Int]]
+      val formEntries = products.zipWithIndex.flatMap { case (productId, index) =>
+        Seq(
+          s"cart.items[$index].product" -> productId,
+          s"cart.items[$index].amount"  -> 1
+        )
+      }.toMap
+      session.set("orderFormEntries", formEntries)
+    }
+    .exec {
+      post("create order draft", "/orders/draft")
+        .formParam("address.fullName", "{firstName} {lastName}")
+        .formParam("address.streetAddress", "${streetAddress}")
+        .formParam("address.zipCode", "{zipCode}")
+        .formParam("address.city", "{city}")
+        .formParam("address.country", "{country}")
+        .formParamMap("${orderFormEntries}")
+        .check(css("#order-confirm-form", "action").saveAs("orderConfirmUri"))
+    }.exec {
+      post("confirm order", "${orderConfirmUri}")
+        .check(css("#payment-form", "action").saveAs("paymentConfirmUri"))
+    }.exec {
+      post("pay", "${paymentConfirmUri}")
+        .formParam("cc-name", "{firstName} {lastName}")
+        .formParam("cc-number", "${cardNumber}")
+        .formParam("cc-exp", "${cardExpiry}")
+        .formParam("x_card_code", "${cardCode}")
+    }
+
+  val buyingScenario = scenario("Buying Scenario")
+    .feed(userFeeder)
+    .exec(signUp, signIn, addProductsToCart)
 		.exec(http("request_7")
 			.get("/cart")
 			.headers(getHeaders))
-		.pause(17)
 		.exec(http("request_8")
 			.post("/orders/draft")
 			.headers(postHeaders)

@@ -40,7 +40,7 @@
             </form>
 
             @if(order.status == OrderStatus.Unconfirmed) {
-                <form action="@routes.OrderController.confirm(order.id)" method="post">
+                <form action="@routes.OrderController.confirm(order.id)" method="post" id="order-confirm-form">
                     <button type="submit" class="btn btn-lg btn-primary btn-block">Confirm and Pay</button>
                 </form>
             } else if (order.status == OrderStatus.Confirmed) {
