@@ -1,16 +1,12 @@
 @import _root_.controllers.AssetsFinder
+@import org.webjars.play.WebJarsUtil
 @import pl.edu.agh.msc.auth.user.User
 @import pl.edu.agh.msc.auth.views.html.main
+@import pl.edu.agh.msc.products.{ Paginated, ProductShort }
+@import pl.edu.agh.msc.review.Rating
 @import pl.edu.agh.msc.ui.controllers.routes
-@import play.twirl.api.Html
-@import org.webjars.play.WebJarsUtil
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
-@import pl.edu.agh.msc.products.ProductShort
-@import pl.edu.agh.msc.products.Paginated
-@import pl.edu.agh.msc.review.Rating
-@import pl.edu.agh.msc.availability.Availability
-@import java.time.format.{ DateTimeFormatter, FormatStyle }
 
 @(
   paginated: Paginated[ProductShort],

@@ -1,19 +1,13 @@
 @import _root_.controllers.AssetsFinder
+@import org.webjars.play.WebJarsUtil
 @import pl.edu.agh.msc.auth.user.User
 @import pl.edu.agh.msc.auth.views.html.main
+@import pl.edu.agh.msc.orders.{ Order, OrderStatus }
+@import pl.edu.agh.msc.products.{ ProductId, ProductShort }
 @import pl.edu.agh.msc.ui.controllers.routes
-@import play.twirl.api.Html
-@import org.webjars.play.WebJarsUtil
 @import play.api.i18n.Messages
 @import play.api.mvc.RequestHeader
-@import pl.edu.agh.msc.orders.Order
-@import pl.edu.agh.msc.review.Rating
-@import pl.edu.agh.msc.availability.Availability
-@import pl.edu.agh.msc.products.{ ProductId, ProductShort }
-@import java.time.format.{ DateTimeFormatter, FormatStyle }
 @import views.html.helper.CSRF
-
-@import pl.edu.agh.msc.orders.OrderStatus
 @(order: Order, products: Map[ProductId, ProductShort])(implicit user: Option[User], request: RequestHeader, messages: Messages, webJarsUtil: WebJarsUtil, assets: AssetsFinder)
 
 @main(s"Simple Shop - Order Confirmation", user) {
@@ -29,7 +23,7 @@
         @for(item <- order.items) {
             <tr>
                 <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
-                <td>@products(item.product).name</td>
+                <td><a href="@routes.ProductController.details(item.product)">@products(item.product).name</a></td>
                 <td>@item.amount</td>
                 <td>@item.price.value.toString</td>
             </tr>
