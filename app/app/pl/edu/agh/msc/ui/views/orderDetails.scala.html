@@ -11,22 +11,25 @@
 @main(s"Simple Shop - Order Confirmation", user) {
 
     <h4><strong>Order #</strong> @order.id.value.toString.split("-").head</h4>
-    <table class="table table-striped">
-        <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Amount</th>
-            <th>Price</th>
-        </tr>
-        @for(item <- order.items) {
+    <table class="table table-striped" id="line-items-table">
+        <thead>
             <tr>
-                <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
-                <td><a href="@routes.ProductController.details(item.product)">@products(item.product).name</a></td>
-                <td>@item.amount</td>
-                <td>@item.price.value.toString</td>
+                <th></th>
+                <th>Name</th>
+                <th>Amount</th>
+                <th>Price</th>
             </tr>
-        }
-
+        </thead>
+        <tbody>
+            @for(item <- order.items) {
+                <tr>
+                    <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
+                    <td><a href="@routes.ProductController.details(item.product)">@products(item.product).name</a></td>
+                    <td>@item.amount</td>
+                    <td>@item.price.value.toString</td>
+                </tr>
+            }
+        </tbody>
     </table>
     <div class="row justify-content-center">
         <div class="col-6">
