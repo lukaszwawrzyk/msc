@@ -26,5 +26,5 @@ class LoggingFilter @Inject() (implicit val mat: Materializer, ec: ExecutionCont
 }
 
 class Filters @Inject() (securityHeadersFilter: SecurityHeadersFilter, loggingFilter: LoggingFilter) extends HttpFilters {
-  override def filters: Seq[EssentialFilter] = Seq(/*loggingFilter, */securityHeadersFilter)
+  override def filters: Seq[EssentialFilter] = Seq( /*loggingFilter, */ securityHeadersFilter)
 }
