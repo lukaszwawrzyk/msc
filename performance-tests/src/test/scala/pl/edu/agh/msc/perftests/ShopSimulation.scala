@@ -30,7 +30,7 @@ class ShopSimulation extends Simulation {
 	)
 
 	setUp(
-		new BuyingScenario(random).create.inject(load(maxUsers = 1000)),
-		new BrowsingScenario(random).create.inject(load(maxUsers = 50)),
-	).protocols(httpProtocol)
+//		new BuyingScenario(random).create.inject(load(maxUsers = 1000)),
+		new BrowsingScenario(random).create.inject(rampUsers(500) over 5.minutes, nothingFor(5.minutes)),
+	).protocols(httpProtocol).maxDuration(10.minutes)
 }

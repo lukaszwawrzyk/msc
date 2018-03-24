@@ -33,6 +33,6 @@ class BrowsingScenario(random: Random) {
 	def create = {
 		scenario("Browsing Scenario")
 			.feed(feeder)
-			.exec(landingPage, openSearchPage, browse)
+			.forever(exec(landingPage, openSearchPage, browse))
 	}
 }
