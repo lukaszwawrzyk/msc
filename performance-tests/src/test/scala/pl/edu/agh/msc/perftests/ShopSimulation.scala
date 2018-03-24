@@ -2,8 +2,8 @@ package pl.edu.agh.msc.perftests
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import scala.concurrent.duration._
 
-// todo add pause
 class ShopSimulation extends Simulation {
 
 	private val baseUrl = "http://localhost:9000"
@@ -24,8 +24,13 @@ class ShopSimulation extends Simulation {
   	.headers(headers)
 
 
+	def load(maxUsers: Int) = Seq(
+		rampUsers(maxUsers) over 15.minutes,
+		nothingFor(10.minutes)
+	)
+
 	setUp(
-		new BuyingScenario(random).create.inject(atOnceUsers(10)),
-		new BrowsingScenario(random).create.inject(atOnceUsers(100)),
+		new BuyingScenario(random).create.inject(load(maxUsers = 1000)),
+		new BrowsingScenario(random).create.inject(load(maxUsers = 50)),
 	).protocols(httpProtocol)
 }
