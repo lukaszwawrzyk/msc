@@ -2,6 +2,7 @@ package pl.edu.agh.msc.perftests
 
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
+import scala.concurrent.duration._
 
 class BuyingScenario(random: Random) {
 
@@ -19,6 +20,7 @@ class BuyingScenario(random: Random) {
       "cardNumber" -> random.fake.business.creditCardNumber(),
       "cardExpiry" -> random.fake.business.creditCardExpiry(),
       "cardCode" -> random.range(100, 999),
+      "shouldReview" -> random.boolean(probability = 0.2),
       "comment" -> random.fake.lorem.paragraph(3),
       "rating" -> random.range(1, 5)
     )
@@ -26,28 +28,32 @@ class BuyingScenario(random: Random) {
 
 
   val signUp =
-    exec(get("show signup form", "/signUp")).exitHereIfFailed
+    exec(get("show signup form", "/signUp")).pause(10, 30).exitHereIfFailed
       .exec(post("post signup form", "/signUp")
         .formParam("firstName", "${firstName}")
         .formParam("lastName", "${lastName}")
         .formParam("email", "${email}")
         .formParam("password", "${password}")).exitHereIfFailed
 
-  val signIn = exec(post("post sign in form", "/signIn")
-    .formParam("email", "${email}")
-    .formParam("password", "${password}")
-    .formParam("rememberMe", "true")).exitHereIfFailed
+  val signIn = pause(10, 20)
+    .exec(post("post sign in form", "/signIn")
+      .formParam("email", "${email}")
+      .formParam("password", "${password}")
+      .formParam("rememberMe", "true")).exitHereIfFailed
 
 
-  val addProductsToCart = foreach("${productsToBuy}", "productToBuy") {
-    exec(get("show product", "/products/${productToBuy}"))
-      .exec(post("add to cart", "/cart/add/${productToBuy}")
-        .formParam("amount", "1"))
-  }
+  val addProductsToCart = tryMax(3) {
+    foreach("${productsToBuy}", "productToBuy") {
+      pause(3, 2.minutes)
+        .exec(get("show product", "/products/${productToBuy}")).pause(3, 3.minutes)
+        .exec(post("add to cart", "/cart/add/${productToBuy}")
+          .formParam("amount", "1")).pause(1, 10)
+    }
+  }.exitHereIfFailed
 
   val placeOrder = exec {
     get("open cart", "/cart")
-  }.exec { session =>
+  }.pause(30, 2.minutes).exec { session =>
     val products = session("productsToBuy").as[Seq[Int]]
     val formEntries = products.zipWithIndex.flatMap { case (productId, index) =>
       Seq(
@@ -65,31 +71,36 @@ class BuyingScenario(random: Random) {
       .formParam("address.country", "${country}")
       .formParamMap("${orderFormEntries}")
       .check(css("#order-confirm-form", "action").saveAs("orderConfirmUri"))
-  }.exec {
+  }.exitHereIfFailed.pause(5, 2.minutes).exec {
     post("confirm order", "${orderConfirmUri}")
       .check(css("#payment-form", "action").saveAs("paymentConfirmUri"))
-  }.exec {
+  }.exitHereIfFailed.pause(1.minute, 5.minutes).exec {
     post("pay", "${paymentConfirmUri}")
       .formParam("cc-name", "${firstName} {lastName}")
       .formParam("cc-number", "${cardNumber}")
       .formParam("cc-exp", "${cardExpiry}")
       .formParam("x_card_code", "${cardCode}")
-  }
+  }.exitHereIfFailed.pause(1.minute)
 
-  val reviewLastBoughtProduct = exec(
-    get("show historical orders", "/orders")
-      .check(css("#historical-orders > tbody > tr:nth-child(1) > td:nth-child(1) > a", "href").saveAs("lastOrderDetailsUri"))
-  ).exec(
-    get("show last order details", "${lastOrderDetailsUri}")
-      .check(css("#line-items-table > tbody > tr:first-child > td:nth-child(2) > a", "href").saveAs("boughtProductUrl"))
-  ).exec(
-    get("show last bought product", "${boughtProductUrl}")
-  ).exec(
-    post("post the comment", "${boughtProductUrl}/review")
-      .formParam("author", "${firstName} ${lastName}")
-      .formParam("rating", "${rating}")
-      .formParam("content", "${comment}")
-  )
+  // normally this would be a separate scenario, but it is easier to do it together
+  // as we have access to user accounts that are generated automatically.
+  // On average this should give simialr results.
+  val reviewLastBoughtProduct = doIf("${shouldReview}") {
+    exec(
+      get("show historical orders", "/orders")
+        .check(css("#historical-orders > tbody > tr:nth-child(1) > td:nth-child(1) > a", "href").saveAs("lastOrderDetailsUri"))
+    ).exitHereIfFailed.pause(5, 30).exec(
+      get("show last order details", "${lastOrderDetailsUri}")
+        .check(css("#line-items-table > tbody > tr:first-child > td:nth-child(2) > a", "href").saveAs("boughtProductUrl"))
+    ).exitHereIfFailed.pause(5, 30).exec(
+      get("show last bought product", "${boughtProductUrl}")
+    ).exitHereIfFailed.pause(30, 5.minutes).exec(
+      post("post the comment", "${boughtProductUrl}/review")
+        .formParam("author", "${firstName} ${lastName}")
+        .formParam("rating", "${rating}")
+        .formParam("content", "${comment}")
+    )
+  }
 
   def create = scenario("Buying Scenario")
     .feed(feeder)

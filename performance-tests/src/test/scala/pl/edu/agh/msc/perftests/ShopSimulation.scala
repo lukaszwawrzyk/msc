@@ -16,7 +16,7 @@ class ShopSimulation extends Simulation {
 
 	val httpProtocol = http
 		.baseURL(baseUrl)
-//		.inferHtmlResources()
+		.inferHtmlResources(WhiteList(baseUrl + "/.*"))
 		.acceptHeader("text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
 		.acceptEncodingHeader("gzip, deflate")
 		.acceptLanguageHeader("pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7")
@@ -24,7 +24,8 @@ class ShopSimulation extends Simulation {
   	.headers(headers)
 
 
-
-
-	setUp(new BuyingScenario(random).create.inject(atOnceUsers(100))).protocols(httpProtocol)
+	setUp(
+		new BuyingScenario(random).create.inject(atOnceUsers(10)),
+		new BrowsingScenario(random).create.inject(atOnceUsers(100)),
+	).protocols(httpProtocol)
 }
