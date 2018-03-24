@@ -49,7 +49,8 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
       reviews <- reviewService.find(id)
       price <- pricingService.find(id)
       availability <- availabilityService.find(id)
-      _ <- updateCachedData(id, product, rating, price)
+      // do it as batch
+      //      _ <- updateCachedData(id, product, rating, price)
     } yield {
       val photo = product.photo.map { p =>
         p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
@@ -65,6 +66,17 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
         id
       )
     }
+  }
+
+  def updateCache(
+    id: ProductId
+  )(implicit ec: ExecutionContext): Future[Unit] = {
+    for {
+      product <- productRepository.find(id)
+      rating <- reviewService.averageRating(id)
+      price <- pricingService.find(id)
+      _ <- updateCachedData(id, product, rating, price)
+    } yield ()
   }
 
   def findShort(

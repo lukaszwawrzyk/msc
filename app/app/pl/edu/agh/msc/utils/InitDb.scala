@@ -71,7 +71,7 @@ class InitDb @Inject() (
       _ <- pricesRepository.save(id, price)
       _ <- availabilityRepository.save(id, stock)
       _ <- Future.traverse(0 to faker.random.nextInt(15))(_ => reviewRepository.insert(id, createReview()))
-      _ <- productService.findDetailed(id) // triggers cache update
+      _ <- productService.updateCache(id) // triggers cache update
     } yield id
   }
 
