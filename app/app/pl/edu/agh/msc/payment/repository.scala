@@ -3,15 +3,14 @@ package pl.edu.agh.msc.payment
 import java.net.URL
 import java.util.UUID
 
+import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.orders.Address
 import pl.edu.agh.msc.pricing.Money
-import javax.inject.{ Inject, Singleton }
-
-import pl.edu.agh.msc.utils.SlickTypeMappings
+import pl.edu.agh.msc.utils.{ SlickTypeMappings, _ }
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 
 @Singleton class PaymentRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {
 
@@ -68,7 +67,7 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseProductsQuery.filter(_.paymentId === paymentId)
   }
 
-  def insert(id: PaymentId, payment: PaymentRequest)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+  def insert(id: PaymentId, payment: PaymentRequest): Unit = db.run {
     val address = payment.address.productIterator.asInstanceOf[Iterator[String]].mkString(";")
     val paymentRow = PaymentRow(
       payment.totalPrice.value,
@@ -86,36 +85,33 @@ import scala.concurrent.{ ExecutionContext, Future }
       basePaymentQuery += paymentRow,
       baseProductsQuery ++= productRows
     )
-  }
+  }.await()
 
-  def find(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = db.run {
-    for {
-      paymentRow: PaymentRow <- paymentByIdQuery(id.value).result.head
-      productRows: Seq[ProductRow] <- productsByPaymentQuery(id.value).result
-    } yield {
-      val address = paymentRow.address.split(";").toSeq match {
-        case Seq(fullName, streetAddress, zipCode, city, country) =>
-          Address(fullName, streetAddress, zipCode, city, country)
-      }
-      val products = productRows.map { row =>
-        Product(row.name, Money(row.unitPrice), row.amount)
-      }
-      PaymentRequest(
-        Money(paymentRow.totalPrice),
-        paymentRow.email,
-        address,
-        products,
-        new URL(paymentRow.returnUrl)
-      )
+  def find(id: PaymentId): PaymentRequest = {
+    val paymentRow: PaymentRow = db.run(paymentByIdQuery(id.value).result.head).await()
+    val productRows: Seq[ProductRow] = db.run(productsByPaymentQuery(id.value).result).await()
+    val address = paymentRow.address.split(";").toSeq match {
+      case Seq(fullName, streetAddress, zipCode, city, country) =>
+        Address(fullName, streetAddress, zipCode, city, country)
     }
+    val products = productRows.map { row =>
+      Product(row.name, Money(row.unitPrice), row.amount)
+    }
+    PaymentRequest(
+      Money(paymentRow.totalPrice),
+      paymentRow.email,
+      address,
+      products,
+      new URL(paymentRow.returnUrl)
+    )
   }
 
-  def getPaymentStatus(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = db.run {
+  def getPaymentStatus(id: PaymentId): Boolean = db.run {
     paymentStatusByIdQuery(id.value).result.head
-  }
+  }.await()
 
-  def setPaymentStatus(id: PaymentId, isPaid: Boolean)(implicit ec: ExecutionContext): Future[Unit] = db.run {
-    DBIO.seq(paymentStatusByIdQuery(id.value).update(isPaid))
-  }
+  def setPaymentStatus(id: PaymentId, isPaid: Boolean): Unit = db.run {
+    paymentStatusByIdQuery(id.value).update(isPaid)
+  }.await()
 
 }

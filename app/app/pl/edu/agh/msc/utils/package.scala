@@ -1,11 +1,16 @@
 package pl.edu.agh.msc
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.duration._
+import scala.concurrent.{ Await, Future }
 
 package object utils {
 
-  def buildMap[K, V](keys: Seq[K])(getValue: K => Future[V])(implicit ec: ExecutionContext): Future[Map[K, V]] = {
-    Future.traverse(keys.distinct)(key => getValue(key).map(key -> _)).map(_.toMap)
+  def buildMap[K, V](keys: Seq[K])(getValue: K => V): Map[K, V] = {
+    keys.distinct.map(key => key -> getValue(key)).toMap
+  }
+
+  implicit class BlockingOps[A](val a: Future[A]) {
+    def await(): A = Await.result(a, 5.minutes)
   }
 
 }

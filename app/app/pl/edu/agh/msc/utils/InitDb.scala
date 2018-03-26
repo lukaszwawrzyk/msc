@@ -30,17 +30,19 @@ class InitDb @Inject() (
   private val faker = new Faker(new Random())
 
   println("Initializing data")
-  def run(left: Int): Future[ProductId] = {
-    println(s"creating, $left left")
-    if (left == 0) createAndSaveProduct()
-    else createAndSaveProduct().flatMap(_ => run(left - 1))
+  def run(left: Int): Unit = {
+    (1 to left).foreach(_ => createAndSaveProduct())
   }
 
-  productService.list(Filtering(), Pagination(1, 1)).flatMap { res =>
-    if (res.data.isEmpty) run(500).map(_ => println("Initialized")) else Future.successful(println("Already initialized"))
+  val res = productService.list(Filtering(), Pagination(1, 1))
+  if (res.data.isEmpty) {
+    run(500)
+    println("Initialized")
+  } else {
+    println("Already initialized")
   }
 
-  private def createAndSaveProduct(): Future[ProductId] = {
+  private def createAndSaveProduct(): ProductId = {
     val category = faker.resolve("commerce.department")
     val name = faker.commerce.productName()
     val price = Money(BigDecimal(faker.commerce.price(2, 2000)))
@@ -60,19 +62,18 @@ class InitDb @Inject() (
       allParagraphs.mkString
     }
     val stock = Availability(faker.random.nextLong(100))
-    for {
-      id <- productsRepository.insert(ProductRepoView(
-        name,
-        Money(0),
-        photo               = Some(photo),
-        cachedAverageRating = None,
-        description         = description
-      ))
-      _ <- pricesRepository.save(id, price)
-      _ <- availabilityRepository.save(id, stock)
-      _ <- Future.traverse(0 to faker.random.nextInt(15))(_ => reviewRepository.insert(id, createReview()))
-      _ <- productService.updateCache(id) // triggers cache update
-    } yield id
+    val id = productsRepository.insert(ProductRepoView(
+      name,
+      Money(0),
+      photo               = Some(photo),
+      cachedAverageRating = None,
+      description         = description
+    ))
+    pricesRepository.save(id, price)
+    availabilityRepository.save(id, stock)
+    (0 to faker.random.nextInt(15)).foreach(_ => reviewRepository.insert(id, createReview()))
+    productService.updateCache(id)
+    id
   }
 
   private def createReview(): Review = {

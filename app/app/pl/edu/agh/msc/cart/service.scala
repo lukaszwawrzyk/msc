@@ -14,15 +14,15 @@ import scala.concurrent.{ ExecutionContext, Future }
     user:    UUID,
     product: ProductId,
     amount:  Int
-  )(implicit ec: ExecutionContext): Future[Unit] = {
+  ): Unit = {
     cartRepository.insert(user, CartItem(product, amount))
   }
 
-  def get(user: UUID)(implicit ec: ExecutionContext): Future[Cart] = {
-    cartRepository.find(user).map(Cart(_))
+  def get(user: UUID): Cart = {
+    Cart(cartRepository.find(user))
   }
 
-  def clear(user: UUID)(implicit ec: ExecutionContext): Future[Unit] = {
+  def clear(user: UUID): Unit = {
     cartRepository.delete(user)
   }
 

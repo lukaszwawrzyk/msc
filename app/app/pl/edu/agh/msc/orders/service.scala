@@ -16,40 +16,38 @@ import scala.concurrent.{ ExecutionContext, Future }
   time:             Time
 ) {
 
-  def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[OrderId] = {
-    for {
-      items <- Future.traverse(orderDraft.cart.items) { cartItem =>
-        productService.price(cartItem.product).map { price =>
-          LineItem(cartItem.product, cartItem.amount, price)
-        }
-      }
-      id = OrderId(UUID.randomUUID())
-      order = Order(
-        id,
-        buyer   = user,
-        address = orderDraft.address,
-        status  = OrderStatus.Unconfirmed,
-        items,
-        date = time.now()
-      )
-      _ <- ordersRepository.insert(order)
-      _ <- cartService.clear(user)
-    } yield id
+  def saveDraft(orderDraft: OrderDraft, user: UUID): OrderId = {
+    val items = orderDraft.cart.items.map { cartItem =>
+      val price = productService.price(cartItem.product)
+      LineItem(cartItem.product, cartItem.amount, price)
+    }
+    val id = OrderId(UUID.randomUUID())
+    val order = Order(
+      id,
+      buyer   = user,
+      address = orderDraft.address,
+      status  = OrderStatus.Unconfirmed,
+      items,
+      date = time.now()
+    )
+    ordersRepository.insert(order)
+    cartService.clear(user)
+    id
   }
 
-  def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = {
+  def find(id: OrderId): Order = {
     ordersRepository.find(id)
   }
 
-  def confirm(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
+  def confirm(id: OrderId): Unit = {
     ordersRepository.changeStatus(id, OrderStatus.Confirmed)
   }
 
-  def historical(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = {
+  def historical(user: UUID): Seq[Order] = {
     ordersRepository.findByUser(user)
   }
 
-  def paymentConfirmed(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
+  def paymentConfirmed(id: OrderId): Unit = {
     ordersRepository.changeStatus(id, OrderStatus.Paid)
   }
 

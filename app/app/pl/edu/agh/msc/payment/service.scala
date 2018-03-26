@@ -14,7 +14,7 @@ trait NotificationService {
 
 @Singleton class WSNotificationService @Inject() (
   ws: WSClient
-)(implicit ec: ExecutionContext) extends NotificationService {
+) extends NotificationService {
 
   override def notifyURL(url: URL): Future[Unit] = {
     ws.url(url.toString).post("").map(_ => ())
@@ -27,27 +27,26 @@ trait NotificationService {
   paymentRepository:   PaymentRepository
 ) {
 
-  def create(payment: PaymentRequest)(implicit ec: ExecutionContext): Future[PaymentId] = {
+  def create(payment: PaymentRequest): PaymentId = {
     val id = PaymentId(UUID.randomUUID())
-    paymentRepository.insert(id, payment).map(_ => id)
+    paymentRepository.insert(id, payment)
+    id
   }
 
-  def isPaid(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = {
+  def isPaid(id: PaymentId): Boolean = {
     paymentRepository.getPaymentStatus(id)
   }
 
   // internal stuff
 
-  def get(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = {
+  def get(id: PaymentId): PaymentRequest = {
     paymentRepository.find(id)
   }
 
-  def pay(id: PaymentId)(implicit ec: ExecutionContext): Future[Unit] = {
-    for {
-      _ <- paymentRepository.setPaymentStatus(id, isPaid = true)
-      payment <- paymentRepository.find(id)
-      _ <- notificationService.notifyURL(payment.returnUrl)
-    } yield ()
+  def pay(id: PaymentId): Unit = {
+    paymentRepository.setPaymentStatus(id, isPaid = true)
+    val payment = paymentRepository.find(id)
+    notificationService.notifyURL(payment.returnUrl)
   }
 
 }

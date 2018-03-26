@@ -7,6 +7,7 @@ import pl.edu.agh.msc.products.ProductId
 import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
+import pl.edu.agh.msc.utils._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -45,22 +46,24 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseQuery.filter(_.productId === product).sortBy(_.date.desc)
   }
 
-  def averageRating(product: ProductId)(implicit ec: ExecutionContext): Future[Option[Rating]] = db.run {
-    averageRatingQuery(product.value).result.map(_.map(Rating(_)))
+  def averageRating(product: ProductId): Option[Rating] = {
+    db.run(averageRatingQuery(product.value).result).await().map(Rating(_))
   }
 
-  def find(product: ProductId)(implicit ec: ExecutionContext): Future[Seq[Review]] = db.run {
-    byProductQuery(product.value).result.map(convertRows((_, r) => r))
+  def find(product: ProductId): Seq[Review] = {
+    val rows = db.run(byProductQuery(product.value).result).await()
+    convertRows((_, r) => r)(rows)
   }
 
-  def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[(Review, ProductId)]] = db.run {
-    baseQuery.sortBy(_.date.desc).take(limit).result.map(convertRows(((row, r) => r -> ProductId(row.productId))))
+  def latest(limit: Int): Seq[(Review, ProductId)] = {
+    val rows = db.run(baseQuery.sortBy(_.date.desc).take(limit).result).await()
+    convertRows((row, r) => r -> ProductId(row.productId))(rows)
   }
 
-  def insert(product: ProductId, review: Review)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+  def insert(product: ProductId, review: Review): Unit = db.run {
     import review._
-    (baseQuery += ReviewRow(author, content, rating.value, date, product.value)).map(_ => ())
-  }
+    baseQuery += ReviewRow(author, content, rating.value, date, product.value)
+  }.await()
 
   private def convertRows[A](transform: (ReviewRow, Review) => A)(rows: Seq[ReviewRow]): Seq[A] = {
     rows.map { row =>

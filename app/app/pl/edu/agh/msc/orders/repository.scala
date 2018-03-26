@@ -2,15 +2,13 @@ package pl.edu.agh.msc.orders
 
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.inject.{ Inject, Singleton }
 
+import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.ProductId
-import pl.edu.agh.msc.utils.SlickTypeMappings
+import pl.edu.agh.msc.utils._
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class OrdersRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
@@ -75,22 +73,22 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseLineItemsQuery.filter(_.orderId === orderId)
   }
 
-  def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = db.run {
+  def find(id: OrderId): Order = db.run {
     orderByIdQuery(id.value).result.head.flatMap(convertRow)
-  }
+  }.await()
 
-  def findByUser(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = db.run {
+  def findByUser(user: UUID): Seq[Order] = db.run {
     for {
       orderRows <- orderByUserQuery(user).result
       orders <- DBIO.sequence(orderRows.map(convertRow))
     } yield orders
-  }
+  }.await()
 
-  def changeStatus(id: OrderId, status: OrderStatus.Value)(implicit ec: ExecutionContext): Future[Unit] = db.run {
-    orderStatusByIdQuery(id.value).update(status.id).map(_ => ())
-  }
+  def changeStatus(id: OrderId, status: OrderStatus.Value): Unit = db.run {
+    orderStatusByIdQuery(id.value).update(status.id)
+  }.await()
 
-  def insert(order: Order)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+  def insert(order: Order): Unit = db.run {
     val orderRow = OrderRow(
       order.status.id,
       order.buyer,
@@ -110,9 +108,9 @@ import scala.concurrent.{ ExecutionContext, Future }
       baseOrderQuery += orderRow,
       baseLineItemsQuery ++= lineItemRows
     )
-  }
+  }.await()
 
-  private def convertRow(orderRow: OrderRow)(implicit ec: ExecutionContext): DBIO[Order] = {
+  private def convertRow(orderRow: OrderRow): DBIO[Order] = {
     for {
       lineItemRows: Seq[LineItemRow] <- lineItemsByOrderQuery(orderRow.id).result
     } yield {

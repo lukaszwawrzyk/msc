@@ -4,8 +4,7 @@ import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.products.ProductId
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
-
-import scala.concurrent.{ ExecutionContext, Future }
+import pl.edu.agh.msc.utils._
 
 @Singleton class AvailabilityRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
@@ -31,15 +30,15 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseQuery.filter(_.productId === productId)
   }
 
-  def find(product: ProductId)(implicit ec: ExecutionContext): Future[Option[Availability]] = db.run {
-    byProductQuery(product.value).result.headOption.map(row => row.map(row => Availability(row.stock)))
+  def find(product: ProductId): Option[Availability] = {
+    db.run(byProductQuery(product.value).result.headOption).await().map(row => Availability(row.stock))
   }
 
-  def save(product: ProductId, availability: Availability)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+  def save(product: ProductId, availability: Availability): Unit = db.run {
     DBIO.seq(
       byProductQuery(product.value).delete,
       baseQuery += AvailabilityRow(product.value, availability.stock)
     ).transactionally
-  }
+  }.await()
 
 }

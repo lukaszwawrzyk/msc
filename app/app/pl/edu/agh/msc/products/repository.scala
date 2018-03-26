@@ -6,7 +6,7 @@ import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.review.Rating
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
-
+import pl.edu.agh.msc.utils._
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class ProductRepoView(
@@ -48,17 +48,16 @@ case class ProductRepoView(
     baseQuery.filter(_.id === id)
   }
 
-  def find(id: ProductId)(implicit ec: ExecutionContext): Future[ProductRepoView] = db.run {
-    byIdQuery(id.value).result.head.map { row =>
-      ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new String(_)), row.cachedAverageRating.map(Rating(_)), row.description)
-    }
+  def find(id: ProductId): ProductRepoView = {
+    val row = db.run(byIdQuery(id.value).result.head).await()
+    ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new String(_)), row.cachedAverageRating.map(Rating(_)), row.description)
   }
 
   def list(
     filtering:  Filtering,
     pagination: Pagination,
     sorting:    Sorting
-  )(implicit ec: ExecutionContext): Future[Paginated[ProductShort]] = db.run {
+  ): Paginated[ProductShort] = db.run {
     val filteredQuery = baseQuery.filter { p =>
       filtering.minRating.map(minRating => p.cachedAverageRating >= minRating.value).getOrElse(LiteralColumn(true).?) &&
         filtering.text.map(_.toLowerCase).map(text => p.name.toLowerCase like s"%$text%").getOrElse(LiteralColumn(true)) &&
@@ -80,21 +79,21 @@ case class ProductRepoView(
       val totalPages = count / pagination.size + (if (count % pagination.size == 0) 0 else 1)
       Paginated(pagination, totalPages, products)
     }
-  }
+  }.await()
 
   private def toListView(row: ProductRow) = {
     ProductShort(row.name, Money(row.cachedPrice), row.photo, row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
   }
 
-  def update(id: ProductId, product: ProductRepoView)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+  def update(id: ProductId, product: ProductRepoView): Unit = db.run {
     import product._
-    DBIO.seq(byIdQuery(id.value).update(ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description, id.value)))
-  }
+    byIdQuery(id.value).update(ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description, id.value))
+  }.await()
 
-  def insert(product: ProductRepoView)(implicit ec: ExecutionContext): Future[ProductId] = db.run {
+  def insert(product: ProductRepoView)(implicit ec: ExecutionContext): ProductId = {
     import product._
-    val insert = insertQuery += ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description)
-    insert.map(id => ProductId(id.value))
+    val id = db.run(insertQuery += ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description)).await()
+    ProductId(id.value)
   }
 
 }

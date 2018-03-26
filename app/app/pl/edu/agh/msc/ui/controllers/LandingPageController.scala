@@ -21,17 +21,13 @@ class LandingPageController @Inject() (
   private val MaxReviews = 10
 
   def view = UserAware { implicit request =>
-
-    for {
-      recommendations <- request.identity
-        .fold(recommendationService.default())(user => recommendationService.forUser(user.id))
-      latestReviews <- reviewService.latest(MaxReviews)
-      reviewsWithProducts <- Future.traverse(latestReviews){
-        case (review, productId) => productService.findShort(productId).map(review -> _)
-      }
-    } yield {
-      Ok(views.html.landing(recommendations, reviewsWithProducts))
+    val recommendations = request.identity
+      .fold(recommendationService.default())(user => recommendationService.forUser(user.id))
+    val latestReviews = reviewService.latest(MaxReviews)
+    val reviewsWithProducts = latestReviews.map {
+      case (review, productId) => review -> productService.findShort(productId)
     }
+    Ok(views.html.landing(recommendations, reviewsWithProducts))
   }
 
 }

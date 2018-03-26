@@ -54,26 +54,21 @@ class ProductController @Inject() (
   ) = UserAware { implicit request =>
     val filtering = Filtering(text, PriceRange(minPrice.map(Money(_)), maxPrice.map(Money(_))).some, minRating.map(r => Rating(r.toDouble)))
     val pagination = Pagination(size.getOrElse(DefaultPageSize), page.getOrElse(1))
-    for {
-      paginated <- productService.list(filtering, pagination)
-    } yield {
-      Ok(views.html.productList(paginated, text, minPrice, maxPrice, minRating))
-    }
+    val paginated = productService.list(filtering, pagination)
+    Ok(views.html.productList(paginated, text, minPrice, maxPrice, minRating))
   }
 
   def details(id: ProductId) = UserAware { implicit request =>
-    for {
-      product <- productService.findDetailed(id)
-      recommedations <- recommendationService.forProduct(id, max = 4)
-    } yield {
-      Ok(views.html.productDetails(product, recommedations))
-    }
+    val product = productService.findDetailed(id)
+    val recommendations = recommendationService.forProduct(id, max = 4)
+    Ok(views.html.productDetails(product, recommendations))
   }
 
   def review(id: ProductId) = Secured { implicit request =>
     reviewForm.bindFromRequest.fold(
-      e => Future.successful(BadRequest(e.errors.toString)),
-      reviewForm => reviewService.add(id, Review(reviewForm.author, reviewForm.content, reviewForm.rating, time.now())).map { _ =>
+      e => BadRequest(e.errors.toString),
+      reviewForm => {
+        reviewService.add(id, Review(reviewForm.author, reviewForm.content, reviewForm.rating, time.now()))
         Redirect(routes.ProductController.details(id))
       }
     )

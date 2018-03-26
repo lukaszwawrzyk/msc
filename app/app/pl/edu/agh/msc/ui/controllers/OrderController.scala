@@ -52,51 +52,46 @@ class OrderController @Inject() (
 
   def draft = Secured { implicit request =>
     orderForm.bindFromRequest.fold(
-      e => Future.successful(BadRequest(e.errors.toString)),
-      orderDraft => ordersService.saveDraft(orderDraft, request.identity.id).map { id =>
+      e => BadRequest(e.errors.toString),
+      orderDraft => {
+        val id = ordersService.saveDraft(orderDraft, request.identity.id)
         Redirect(routes.OrderController.view(id))
       }
     )
   }
 
   def view(id: OrderId) = Secured { implicit request =>
-    for {
-      order <- ordersService.find(id)
-      products <- buildMap(order.items.map(_.product))(productService.findShort)
-    } yield {
-      Ok(views.html.orderDetails(order, products))
-    }
+    val order = ordersService.find(id)
+    val products = buildMap(order.items.map(_.product))(productService.findShort)
+    Ok(views.html.orderDetails(order, products))
   }
 
   def list() = Secured { implicit request =>
-    for {
-      orders <- ordersService.historical(request.identity.id)
-    } yield Ok(views.html.orderList(orders))
+    val orders = ordersService.historical(request.identity.id)
+    Ok(views.html.orderList(orders))
   }
 
   def confirm(id: OrderId) = Secured { implicit request =>
-    for {
-      order <- ordersService.find(id)
-      res <- if (order.buyer != request.identity.id) {
-        Future.successful(BadRequest("You don't have such order"))
-      } else {
-        for {
-          _ <- ordersService.confirm(id)
-          products <- buildMap(order.items.map(_.product))(productService.findShort)
-          paymentId <- paymentService.create(PaymentRequest(
-            order.totalPrice,
-            request.identity.email.getOrElse(""),
-            order.address,
-            order.items.map(item => Product(products(item.product).name, item.price, item.amount)),
-            new URL(routes.OrderController.paid(id).absoluteURL())
-          ))
-        } yield Redirect(routes.PaymentController.view(paymentId))
-      }
-    } yield res
+    val order = ordersService.find(id)
+    if (order.buyer != request.identity.id) {
+      BadRequest("You don't have such order")
+    } else {
+      ordersService.confirm(id)
+      val products = buildMap(order.items.map(_.product))(productService.findShort)
+      val paymentId = paymentService.create(PaymentRequest(
+        totalPrice = order.totalPrice,
+        email = request.identity.email.getOrElse(""),
+        address = order.address,
+        products = order.items.map(item => Product(products(item.product).name, item.price, item.amount)),
+        returnUrl = new URL(routes.OrderController.paid(id).absoluteURL())
+      ))
+      Redirect(routes.PaymentController.view(paymentId))
+    }
   }
 
   def paid(id: OrderId) = UserAware { implicit request =>
-    ordersService.paymentConfirmed(id).map(_ => Ok)
+    ordersService.paymentConfirmed(id)
+    Ok
   }
 
 }

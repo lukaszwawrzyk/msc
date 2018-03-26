@@ -4,23 +4,22 @@ import javax.inject.{ Inject, Singleton }
 
 import pl.edu.agh.msc.products.ProductId
 
-import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class ReviewService @Inject() (reviewRepository: ReviewRepository) {
 
-  def find(id: ProductId)(implicit ec: ExecutionContext): Future[Seq[Review]] = {
+  def find(id: ProductId): Seq[Review] = {
     reviewRepository.find(id)
   }
 
-  def latest(limit: Int)(implicit ec: ExecutionContext): Future[Seq[(Review, ProductId)]] = {
+  def latest(limit: Int): Seq[(Review, ProductId)] = {
     reviewRepository.latest(limit)
   }
 
-  def averageRating(id: ProductId)(implicit ec: ExecutionContext): Future[Option[Rating]] = {
+  def averageRating(id: ProductId): Option[Rating] = {
     reviewRepository.averageRating(id)
   }
 
-  def add(id: ProductId, review: Review)(implicit ec: ExecutionContext): Future[Unit] = {
+  def add(id: ProductId, review: Review): Unit = {
     reviewRepository.insert(id, review)
   }
 

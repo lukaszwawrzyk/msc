@@ -1,14 +1,12 @@
 package pl.edu.agh.msc.cart
 
 import java.util.UUID
-import javax.inject.{ Inject, Singleton }
 
+import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.products.ProductId
-import pl.edu.agh.msc.utils.SlickTypeMappings
+import pl.edu.agh.msc.utils.{ SlickTypeMappings, _ }
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
-
-import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class CartRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {
 
@@ -38,16 +36,16 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseQuery.filter(_.userId === userId)
   }
 
-  def find(user: UUID)(implicit ec: ExecutionContext): Future[Seq[CartItem]] = db.run {
-    byUserIdQuery(user).result.map(_.map(row => CartItem(ProductId(row.productId), row.amount)))
+  def find(user: UUID): Seq[CartItem] = {
+    db.run(byUserIdQuery(user).result).await().map(row => CartItem(ProductId(row.productId), row.amount))
   }
 
-  def delete(user: UUID)(implicit ec: ExecutionContext): Future[Unit] = db.run {
-    DBIO.seq(byUserIdQuery(user).delete)
-  }
+  def delete(user: UUID): Unit = db.run {
+    byUserIdQuery(user).delete
+  }.await()
 
-  def insert(user: UUID, item: CartItem)(implicit ec: ExecutionContext): Future[Unit] = db.run {
-    DBIO.seq(baseQuery += CartItemRow(item.product.value, item.amount, user))
-  }
+  def insert(user: UUID, item: CartItem): Unit = db.run {
+    baseQuery += CartItemRow(item.product.value, item.amount, user)
+  }.await()
 
 }

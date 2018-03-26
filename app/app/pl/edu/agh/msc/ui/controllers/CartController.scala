@@ -20,24 +20,18 @@ class CartController @Inject() (
   import sc._
 
   def view = Secured { implicit request =>
-    for {
-      cart <- cartService.get(request.identity.id)
-      products <- buildMap(cart.items.map(_.product))(productService.findShort)
-    } yield {
-      Ok(views.html.cart(cart, products))
-    }
+    val cart = cartService.get(request.identity.id)
+    val products = buildMap(cart.items.map(_.product))(productService.findShort)
+    Ok(views.html.cart(cart, products))
   }
 
   def add(productId: ProductId) = Secured { implicit request =>
     extractNumberField("amount") match {
       case Some(amount) =>
-        for {
-          _ <- cartService.add(request.identity.id, productId, amount)
-        } yield {
-          Redirect(routes.ProductController.details(productId)).flashing("success" -> "Added to cart")
-        }
+        cartService.add(request.identity.id, productId, amount)
+        Redirect(routes.ProductController.details(productId)).flashing("success" -> "Added to cart")
       case None =>
-        Future.successful(BadRequest)
+        BadRequest
     }
   }
 
