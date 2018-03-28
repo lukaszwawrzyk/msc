@@ -29,7 +29,7 @@ import play.api.libs.concurrent.AkkaGuiceSupport
 import play.api.libs.ws.WSClient
 import play.api.mvc.CookieHeaderEncoding
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
 
@@ -46,21 +46,21 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
     bind[UnsecuredErrorHandler].to[CustomUnsecuredErrorHandler].asEagerSingleton
     bind[SecuredErrorHandler].to[CustomSecuredErrorHandler].asEagerSingleton
     bind[CacheLayer].to[PlayCacheLayer].asEagerSingleton
-    bind[IDGenerator].toInstance(new SecureRandomIDGenerator())
+    bind[IDGenerator].to[SecureRandomIDGenerator].asEagerSingleton
     bind[FingerprintGenerator].toInstance(new DefaultFingerprintGenerator(false))
     bind[EventBus].toInstance(EventBus())
     bind[Clock].toInstance(Clock())
   }
 
   @Provides
-  def provideHTTPLayer(client: WSClient): HTTPLayer = new PlayHTTPLayer(client)
+  def provideHTTPLayer(client: WSClient)(implicit ec: ExecutionContext): HTTPLayer = new PlayHTTPLayer(client)
 
   @Provides
   def provideEnvironment(
     userService:          UserService,
     authenticatorService: AuthenticatorService[CookieAuthenticator],
     eventBus:             EventBus
-  ): Environment[DefaultEnv] = {
+  )(implicit ec: ExecutionContext): Environment[DefaultEnv] = {
     Environment[DefaultEnv](
       userService,
       authenticatorService,
@@ -84,7 +84,7 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
   @Provides
   def provideAuthInfoRepository(
     passwordInfoDAO: DelegableAuthInfoDAO[PasswordInfo]
-  ): AuthInfoRepository = {
+  )(implicit ec: ExecutionContext): AuthInfoRepository = {
     new DelegableAuthInfoRepository(passwordInfoDAO)
   }
 
@@ -97,7 +97,7 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
     idGenerator:                             IDGenerator,
     configuration:                           Configuration,
     clock:                                   Clock
-  ): AuthenticatorService[CookieAuthenticator] = {
+  )(implicit ec: ExecutionContext): AuthenticatorService[CookieAuthenticator] = {
     val config = configuration.underlying.as[CookieAuthenticatorSettings]("silhouette.authenticator")
     val authenticatorEncoder = new CrypterAuthenticatorEncoder(crypter)
 
@@ -113,8 +113,13 @@ class AuthModule extends AbstractModule with ScalaModule with AkkaGuiceSupport {
   def provideCredentialsProvider(
     authInfoRepository:     AuthInfoRepository,
     passwordHasherRegistry: PasswordHasherRegistry
-  ): CredentialsProvider = {
+  )(implicit ec: ExecutionContext): CredentialsProvider = {
     new CredentialsProvider(authInfoRepository, passwordHasherRegistry)
+  }
+
+  @Provides
+  def provideSecureRandomIDGenerator(implicit ec: ExecutionContext): SecureRandomIDGenerator = {
+    new SecureRandomIDGenerator()
   }
 
 }
