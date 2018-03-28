@@ -14,7 +14,7 @@ trait NotificationService {
 
 @Singleton class WSNotificationService @Inject() (
   ws: WSClient
-) extends NotificationService {
+)(implicit ec: ExecutionContext) extends NotificationService {
 
   override def notifyURL(url: URL): Future[Unit] = {
     ws.url(url.toString).post("").map(_ => ())

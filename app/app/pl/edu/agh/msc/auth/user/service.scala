@@ -1,19 +1,17 @@
 package pl.edu.agh.msc.auth.user
 
-import java.util.UUID
-import javax.inject.Inject
-
 import com.mohiva.play.silhouette.api.LoginInfo
 import com.mohiva.play.silhouette.api.services.IdentityService
+import javax.inject.Inject
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.Future
 
 class UserService @Inject() (
   userRepository: UserRepository
-)(implicit ex: ExecutionContext) extends IdentityService[User] {
+) extends IdentityService[User] {
 
-  def retrieve(loginInfo: LoginInfo): Future[Option[User]] = userRepository.find(loginInfo)
+  def retrieve(loginInfo: LoginInfo): Future[Option[User]] = Future.successful(userRepository.find(loginInfo))
 
-  def save(user: User): Future[User] = userRepository.save(user)
+  def save(user: User): Future[User] = Future.successful(userRepository.save(user))
 
 }

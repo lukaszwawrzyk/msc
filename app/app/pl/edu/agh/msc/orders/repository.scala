@@ -73,16 +73,15 @@ import slick.jdbc.JdbcProfile
     baseLineItemsQuery.filter(_.orderId === orderId)
   }
 
-  def find(id: OrderId): Order = db.run {
-    orderByIdQuery(id.value).result.head.flatMap(convertRow)
-  }.await()
+  def find(id: OrderId): Order = {
+    val row = db.run(orderByIdQuery(id.value).result.head).await()
+    convertRow(row)
+  }
 
-  def findByUser(user: UUID): Seq[Order] = db.run {
-    for {
-      orderRows <- orderByUserQuery(user).result
-      orders <- DBIO.sequence(orderRows.map(convertRow))
-    } yield orders
-  }.await()
+  def findByUser(user: UUID): Seq[Order] = {
+    val orderRows = db.run(orderByUserQuery(user).result).await()
+    orderRows.map(convertRow)
+  }
 
   def changeStatus(id: OrderId, status: OrderStatus.Value): Unit = db.run {
     orderStatusByIdQuery(id.value).update(status.id)
@@ -110,31 +109,28 @@ import slick.jdbc.JdbcProfile
     )
   }.await()
 
-  private def convertRow(orderRow: OrderRow): DBIO[Order] = {
-    for {
-      lineItemRows: Seq[LineItemRow] <- lineItemsByOrderQuery(orderRow.id).result
-    } yield {
-      val address = Address(
-        orderRow.fullName,
-        orderRow.streetAddress,
-        orderRow.zipCode,
-        orderRow.city,
-        orderRow.country
-      )
+  private def convertRow(orderRow: OrderRow): Order = {
+    val lineItemRows: Seq[LineItemRow] = db.run(lineItemsByOrderQuery(orderRow.id).result).await()
+    val address = Address(
+      orderRow.fullName,
+      orderRow.streetAddress,
+      orderRow.zipCode,
+      orderRow.city,
+      orderRow.country
+    )
 
-      val lineItems = lineItemRows.map { itemRow =>
-        LineItem(ProductId(itemRow.productId), itemRow.amount, Money(itemRow.price))
-      }
-
-      Order(
-        OrderId(orderRow.id),
-        orderRow.buyerId,
-        address,
-        OrderStatus(orderRow.status),
-        lineItems,
-        orderRow.date
-      )
+    val lineItems = lineItemRows.map { itemRow =>
+      LineItem(ProductId(itemRow.productId), itemRow.amount, Money(itemRow.price))
     }
+
+    Order(
+      OrderId(orderRow.id),
+      orderRow.buyerId,
+      address,
+      OrderStatus(orderRow.status),
+      lineItems,
+      orderRow.date
+    )
   }
 
 }

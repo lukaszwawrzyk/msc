@@ -57,7 +57,7 @@ case class ProductRepoView(
     filtering:  Filtering,
     pagination: Pagination,
     sorting:    Sorting
-  ): Paginated[ProductShort] = db.run {
+  ): Paginated[ProductShort] = {
     val filteredQuery = baseQuery.filter { p =>
       filtering.minRating.map(minRating => p.cachedAverageRating >= minRating.value).getOrElse(LiteralColumn(true).?) &&
         filtering.text.map(_.toLowerCase).map(text => p.name.toLowerCase like s"%$text%").getOrElse(LiteralColumn(true)) &&
@@ -71,15 +71,12 @@ case class ProductRepoView(
     val finalQuery = sortedQuery
       .drop((pagination.page - 1) * pagination.size).take(pagination.size)
 
-    for {
-      rows <- finalQuery.result
-      count <- filteredQuery.size.result
-    } yield {
-      val products = rows.map(toListView)
-      val totalPages = count / pagination.size + (if (count % pagination.size == 0) 0 else 1)
-      Paginated(pagination, totalPages, products)
-    }
-  }.await()
+    val rows = db.run(finalQuery.result).await()
+    val count = db.run(filteredQuery.size.result).await()
+    val products = rows.map(toListView)
+    val totalPages = count / pagination.size + (if (count % pagination.size == 0) 0 else 1)
+    Paginated(pagination, totalPages, products)
+  }
 
   private def toListView(row: ProductRow) = {
     ProductShort(row.name, Money(row.cachedPrice), row.photo, row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))

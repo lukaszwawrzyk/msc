@@ -6,10 +6,10 @@ import com.mohiva.play.silhouette.persistence.daos.DelegableAuthInfoDAO
 import javax.inject.Inject
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
-
+import pl.edu.agh.msc.utils._
 import scala.concurrent.{ ExecutionContext, Future }
 
-class PasswordRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) extends DelegableAuthInfoDAO[PasswordInfo] {
+class PasswordRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends DelegableAuthInfoDAO[PasswordInfo] {
 
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   protected val profile = dbConfig.profile
@@ -48,32 +48,33 @@ class PasswordRepository @Inject() (dbConfigProvider: DatabaseConfigProvider)(im
     byIdQueryFunc(providerId, providerKey).exists
   }
 
-  override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = db.run {
-    byIdQuery((loginInfo.providerID, loginInfo.providerKey)).result.headOption.map(_.map(toPasswordInfo))
+  override def find(loginInfo: LoginInfo): Future[Option[PasswordInfo]] = Future.successful {
+    db.run(byIdQuery((loginInfo.providerID, loginInfo.providerKey)).result.headOption).await().map(toPasswordInfo)
   }
 
-  override def add(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = db.run {
+  override def add(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = Future.successful {
     val row = toRow(loginInfo, authInfo)
-    (baseQuery += row).map(_ => authInfo)
+    db.run(baseQuery += row).await()
+    authInfo
   }
 
-  override def update(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = db.run {
+  override def update(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = Future.successful {
     val row = toRow(loginInfo, authInfo)
-    byIdQuery((loginInfo.providerID, loginInfo.providerKey)).update(row).map(_ => authInfo)
+    db.run(byIdQuery((loginInfo.providerID, loginInfo.providerKey)).update(row)).await()
+    authInfo
   }
 
   override def save(loginInfo: LoginInfo, authInfo: PasswordInfo): Future[PasswordInfo] = {
-    db.run(existsByIdQuery((loginInfo.providerID, loginInfo.providerKey)).result).flatMap { exists =>
-      if (exists) {
-        add(loginInfo, authInfo)
-      } else {
-        save(loginInfo, authInfo)
-      }
+    val exists = db.run(existsByIdQuery((loginInfo.providerID, loginInfo.providerKey)).result).await()
+    if (exists) {
+      add(loginInfo, authInfo)
+    } else {
+      save(loginInfo, authInfo)
     }
   }
 
-  override def remove(loginInfo: LoginInfo): Future[Unit] = db.run {
-    DBIO.seq(byIdQuery((loginInfo.providerID, loginInfo.providerKey)).delete)
+  override def remove(loginInfo: LoginInfo): Future[Unit] = Future.successful {
+    db.run(byIdQuery((loginInfo.providerID, loginInfo.providerKey)).delete).await()
   }
 
   private def toRow(loginInfo: LoginInfo, authInfo: PasswordInfo) = {

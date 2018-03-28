@@ -7,6 +7,7 @@ import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
+import pl.edu.agh.msc.utils._
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -39,21 +40,22 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseQuery.filter(_.expiry < expiresBefore)
   }
 
-  def find(id: UUID)(implicit ec: ExecutionContext): Future[Option[AuthToken]] = db.run {
-    byIdQuery(id).result.headOption.map(_.map(convertRow))
+  def find(id: UUID): Option[AuthToken] = {
+    db.run(byIdQuery(id).result.headOption).await().map(convertRow)
   }
 
-  def findExpired(now: LocalDateTime)(implicit ec: ExecutionContext): Future[Seq[AuthToken]] = db.run {
-    byExpirationQuery(now).result.map(_.map(convertRow))
+  def findExpired(now: LocalDateTime): Seq[AuthToken] = {
+    db.run(byExpirationQuery(now).result).await().map(convertRow)
   }
 
-  def save(token: AuthToken)(implicit ec: ExecutionContext): Future[AuthToken] = db.run {
-    (baseQuery += AuthTokenRow(token.userID, token.expiry, token.id)).map(_ => token)
+  def save(token: AuthToken): AuthToken = {
+    db.run(baseQuery += AuthTokenRow(token.userID, token.expiry, token.id)).await()
+    token
   }
 
-  def remove(id: UUID)(implicit ec: ExecutionContext): Future[Unit] = db.run {
-    byIdQuery(id).delete.map(_ => ())
-  }
+  def remove(id: UUID): Unit = db.run {
+    byIdQuery(id).delete
+  }.await()
 
   private def convertRow(row: AuthTokenRow) = {
     AuthToken(row.id, row.userId, row.expiry)

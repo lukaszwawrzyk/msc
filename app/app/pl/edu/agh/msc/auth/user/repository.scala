@@ -7,7 +7,7 @@ import com.mohiva.play.silhouette.api.LoginInfo
 import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
-
+import pl.edu.agh.msc.utils._
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class UserRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {
@@ -41,16 +41,17 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseQuery.filter(user => user.providerId === providerId && user.providerKey === providerKey)
   }
 
-  def find(loginInfo: LoginInfo)(implicit ec: ExecutionContext): Future[Option[User]] = db.run {
-    byLoginInfoQuery((loginInfo.providerID, loginInfo.providerKey)).result.headOption.map(_.map { userRow =>
+  def find(loginInfo: LoginInfo): Option[User] = {
+    db.run(byLoginInfoQuery((loginInfo.providerID, loginInfo.providerKey)).result.headOption).await().map { userRow =>
       import userRow._
       User(id, loginInfo, firstName, lastName, email)
-    })
+    }
   }
 
-  def save(user: User)(implicit ec: ExecutionContext): Future[User] = db.run {
+  def save(user: User): User = {
     val row = UserRow(user.loginInfo.providerID, user.loginInfo.providerKey, user.firstName, user.lastName, user.email, user.id)
-    (baseQuery += row).map(_ => user)
+    db.run(baseQuery += row).await()
+    user
   }
 
 }
