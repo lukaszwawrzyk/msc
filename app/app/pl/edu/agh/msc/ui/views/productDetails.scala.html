@@ -18,7 +18,7 @@
     <table>
         <tr>
             <td>
-                <img src="@product.photo.getOrElse { @assets.path("images/placeholder_full.jpg") }">
+                <img src="http://i.imgur.com/W7zyZNu.jpg">
             </td>
             <td>
                 <ul>
@@ -72,7 +72,7 @@
         @for(product <- recommendations) {
             <div class="col-auto">
                 <ul>
-                    <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                    <li><img src="http://i.imgur.com/ThRGE6S.jpg"></li>
                     <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
                     <li>$@product.price.value.toString</li>
                     <li>

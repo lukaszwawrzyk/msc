@@ -23,7 +23,7 @@
         <tbody>
             @for(item <- order.items) {
                 <tr>
-                    <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
+                    <td><img src="http://i.imgur.com/ThRGE6S.jpg"></td>
                     <td><a href="@routes.ProductController.details(item.product)">@products(item.product).name</a></td>
                     <td>@item.amount</td>
                     <td>@item.price.value.toString</td>

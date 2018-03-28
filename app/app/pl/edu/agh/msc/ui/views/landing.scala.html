@@ -19,7 +19,7 @@
             @for(product <- recommendedProducts) {
               <td>
                   <ul>
-                      <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                      <li><img src="http://i.imgur.com/ThRGE6S.jpg"></li>
                       <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
                       <li>$@product.price.value.toString</li>
                       <li>
@@ -45,7 +45,7 @@
             <tr>
                 <td>
                     <ul>
-                        <li><img src="@product.photo.getOrElse { @assets.path("images/placeholder.jpg") }"></li>
+                        <li><img src="http://i.imgur.com/ThRGE6S.jpg"></li>
                         <li><a href="@routes.ProductController.details(product.id)">@product.name</a></li>
                         <li>$@product.price.value.toString</li>
                     </ul>

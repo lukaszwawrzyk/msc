@@ -21,7 +21,7 @@
             </tr>
             @for(item <- cart.items) {
                 <tr>
-                    <td><img src="@products(item.product).photo.getOrElse { @assets.path("images/placeholder.jpg") }"></td>
+                    <td><img src="http://i.imgur.com/ThRGE6S.jpg"></td>
                     <td>@products(item.product).name</td>
                     <td>@item.amount</td>
                     <td>@products(item.product).price.value.toString</td>
