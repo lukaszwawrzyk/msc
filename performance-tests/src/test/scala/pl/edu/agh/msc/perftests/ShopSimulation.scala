@@ -30,7 +30,17 @@ class ShopSimulation extends Simulation {
 	)
 
 	setUp(
-		new BuyingScenario(random).create.inject(rampUsers(50) over 3.minutes, constantUsersPerSec(2) during 7.minutes).customPauses(3.seconds.toMillis),
-		new BrowsingScenario(random).create.inject(rampUsers(500) over 5.minutes, nothingFor(5.minutes)).customPauses(3.seconds.toMillis)
+		new BuyingScenario(random).create.inject(
+			constantUsersPerSec(100) during 10.minutes
+		).throttle(
+			reachRps(400) in 5.minutes,
+			holdFor(5.minutes)
+		),
+		new BrowsingScenario(random).create.inject(
+			constantUsersPerSec(100) during 10.minutes
+		).throttle(
+			reachRps(40) in 5.minutes,
+			holdFor(5.minutes)
+		)
 	).protocols(httpProtocol).maxDuration(10.minutes)
 }
