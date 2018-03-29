@@ -6,7 +6,7 @@ import scala.concurrent.duration._
 
 class ShopSimulation extends Simulation {
 
-	private val baseUrl = "http://localhost:9000"
+	private val baseUrl = "http://192.168.1.1:9000"
 
   val random = new Random(lastProductId = 501)
 
@@ -30,7 +30,7 @@ class ShopSimulation extends Simulation {
 	)
 
 	setUp(
-//		new BuyingScenario(random).create.inject(load(maxUsers = 1000)),
-		new BrowsingScenario(random).create.inject(rampUsers(500) over 5.minutes, nothingFor(5.minutes)),
+		new BuyingScenario(random).create.inject(rampUsers(50) over 3.minutes, constantUsersPerSec(2) during 7.minutes).customPauses(3.seconds.toMillis),
+		new BrowsingScenario(random).create.inject(rampUsers(500) over 5.minutes, nothingFor(5.minutes)).customPauses(3.seconds.toMillis)
 	).protocols(httpProtocol).maxDuration(10.minutes)
 }
