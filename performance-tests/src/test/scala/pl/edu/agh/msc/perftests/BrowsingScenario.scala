@@ -1,6 +1,7 @@
 package pl.edu.agh.msc.perftests
 
 import io.gatling.core.Predef._
+import scala.concurrent.duration._
 
 class BrowsingScenario(random: Random) {
 
@@ -8,9 +9,9 @@ class BrowsingScenario(random: Random) {
 		"productsToViewPerSearch" -> Seq.fill(random.range(1, 5))(Seq.fill(random.range(1, 8))(random.productId()))
 	))
 
-	val landingPage = exec(get("Landing page", "/landing"))
+	val landingPage = exec(get("Landing page", "/landing")).pause(10, 60)
 
-	val openSearchPage = exec(get("Products no query", "/products"))
+	val openSearchPage = exec(get("Products no query", "/products")).pause(10, 30)
 
 	def searchProducts(name: String) = exec(get("Products by name", s"/products?text=$name"))
 
@@ -21,9 +22,9 @@ class BrowsingScenario(random: Random) {
 	val browse = foreach("${productsToViewPerSearch}", "productsToView") {
 		uniformRandomSwitch(
 			searchStrings.map(name => exec(
-				searchProducts(name),
+				searchProducts(name).pause(10, 30),
 				foreach("${productsToView}", "productToView") {
-					productDetails("${productToView}")
+					productDetails("${productToView}").pause(10, 3.minutes)
 				}
 			)): _*
 		)

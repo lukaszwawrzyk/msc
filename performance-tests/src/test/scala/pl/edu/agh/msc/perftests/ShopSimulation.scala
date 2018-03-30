@@ -24,23 +24,12 @@ class ShopSimulation extends Simulation {
   	.headers(headers)
 
 
-	def load(maxUsers: Int) = Seq(
-		rampUsers(maxUsers) over 15.minutes,
-		nothingFor(10.minutes)
-	)
-
 	setUp(
 		new BuyingScenario(random).create.inject(
-			constantUsersPerSec(100) during 10.minutes
-		).throttle(
-			reachRps(400) in 5.minutes,
-			holdFor(5.minutes)
-		),
+			rampUsers(100) over 5.minutes, constantUsersPerSec(0.5) during 5.minutes
+		).customPauses(3.seconds.toMillis),
 		new BrowsingScenario(random).create.inject(
-			constantUsersPerSec(100) during 10.minutes
-		).throttle(
-			reachRps(40) in 5.minutes,
-			holdFor(5.minutes)
-		)
+			rampUsers(600) over 5.minutes, constantUsersPerSec(1) during 5.minutes
+		).customPauses(3.seconds.toMillis)
 	).protocols(httpProtocol).maxDuration(10.minutes)
 }
