@@ -104,6 +104,7 @@ class BuyingScenario(random: Random) {
 
   def create = scenario("Buying Scenario")
     .feed(feeder)
-    .exec(signUp, signIn, addProductsToCart, placeOrder, reviewLastBoughtProduct)
+    .exec(signUp, signIn)
+    .forever(exec(addProductsToCart, placeOrder, reviewLastBoughtProduct))
 
 }
