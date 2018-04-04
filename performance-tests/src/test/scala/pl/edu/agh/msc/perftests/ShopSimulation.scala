@@ -27,15 +27,15 @@ class BaseSimulation extends Simulation {
 
 class StandardUsage extends BaseSimulation {
 
-  val simulationTime = 7.minutes
+  val simulationTime = 10.minutes
   val pauseTime = 1.second.toMillis
 
   setUp(
     buying.repeating.inject(
-      rampUsers(1000) over simulationTime
+      rampUsers(1400) over simulationTime
     ).customPauses(pauseTime),
     browsing.repeating.inject(
-      rampUsers(50) over simulationTime
+      rampUsers(100) over simulationTime
     ).customPauses(pauseTime)
   ).protocols(httpProtocol).maxDuration(simulationTime)
 
@@ -49,10 +49,10 @@ class HighLoad extends BaseSimulation {
 
   setUp(
     buying.repeating.inject(
-      rampUsers(2000) over simulationTime
+      rampUsers(20000) over simulationTime
     ).customPauses(pauseTime),
     browsing.repeating.inject(
-      rampUsers(100) over simulationTime
+      rampUsers(2000) over simulationTime
     ).customPauses(pauseTime)
   ).protocols(httpProtocol).maxDuration(simulationTime)
 
@@ -62,13 +62,12 @@ class HighLoad extends BaseSimulation {
 class HighBuyerLoad extends BaseSimulation {
 
   val simulationTime = 5.minutes
-  val pauseTime = 1.second.toMillis
+  val pauseTime = 200.millis.toMillis
 
   setUp(
-    buying.single.inject(
-      rampUsers(1000) over simulationTime
+    buying.repeating.inject(
+      rampUsers(10000) over simulationTime
     ).customPauses(pauseTime)
   ).protocols(httpProtocol).maxDuration(simulationTime)
 
 }
-
