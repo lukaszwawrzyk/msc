@@ -102,9 +102,13 @@ class BuyingScenario(random: Random) {
     )
   }
 
-  def create = scenario("Buying Scenario")
+  def repeating = scenario("Buying Scenario")
     .feed(feeder)
     .exec(signUp, signIn)
     .forever(exec(addProductsToCart, placeOrder, reviewLastBoughtProduct))
+
+  def single = scenario("Buying Scenario")
+    .feed(feeder)
+    .exec(signUp, signIn, addProductsToCart, placeOrder, reviewLastBoughtProduct)
 
 }

@@ -31,9 +31,16 @@ class BrowsingScenario(random: Random) {
 	}
 
 
-	def create = {
+	def repeating = {
 		scenario("Browsing Scenario")
 			.feed(feeder)
 			.forever(exec(landingPage, openSearchPage, browse))
 	}
+
+	def single = {
+		scenario("Browsing Scenario")
+			.feed(feeder)
+			.exec(landingPage, openSearchPage, browse)
+	}
+
 }
