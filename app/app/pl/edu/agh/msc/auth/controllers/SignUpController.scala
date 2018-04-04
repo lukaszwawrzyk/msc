@@ -11,7 +11,7 @@ import pl.edu.agh.msc.auth._
 import pl.edu.agh.msc.auth.controllers.forms.SignUpForm
 import pl.edu.agh.msc.auth.token.AuthTokenService
 import pl.edu.agh.msc.auth.user.{ User, UserService }
-import pl.edu.agh.msc.utils.SecuredController
+import pl.edu.agh.msc.utils._
 import play.api.i18n.Messages
 
 import scala.concurrent.Future
@@ -49,8 +49,10 @@ class SignUpController @Inject() (
             for {
               savedUser <- userService.save(user)
               hashedPassword = passwordHasherRegistry.current.hash(data.password)
-              _ <- authInfoRepository.add(loginInfo, hashedPassword)
-              _ <- authTokenService.create(savedUser.id)
+              _ <- Future.sequence(Seq(
+                authInfoRepository.add(loginInfo, hashedPassword),
+                authTokenService.create(savedUser.id)
+              ))
               _ <- Future.successful(silhouette.env.eventBus.publish(SignUpEvent(savedUser, request)))
             } yield {
               Redirect(routes.SignInController.view()).flashing("info" -> Messages("sign.up.success"))

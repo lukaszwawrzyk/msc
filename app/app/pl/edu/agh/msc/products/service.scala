@@ -4,11 +4,11 @@ import javax.inject.{ Inject, Singleton }
 
 import cats.data.OptionT
 import cats.instances.future._
+import cats.syntax.apply._
 import pl.edu.agh.msc.availability.AvailabilityService
 import pl.edu.agh.msc.pricing.{ Money, PricingService }
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.review.{ Rating, ReviewService }
-
 import scala.concurrent.{ ExecutionContext, Future }
 
 case class Sorting(byNameAsc: Boolean)
@@ -43,15 +43,13 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
   def findDetailed(
     id: ProductId
   )(implicit ec: ExecutionContext): Future[ProductDetails] = {
-    for {
-      product <- productRepository.find(id)
-      rating <- reviewService.averageRating(id)
-      reviews <- reviewService.find(id)
-      price <- pricingService.find(id)
-      availability <- availabilityService.find(id)
-      // do it as batch
-      //      _ <- updateCachedData(id, product, rating, price)
-    } yield {
+    (
+      productRepository.find(id),
+      reviewService.averageRating(id),
+      reviewService.find(id),
+      pricingService.find(id),
+      availabilityService.find(id)
+    ).mapN { (product, rating, reviews, price, availability) =>
       val photo = product.photo.map { p =>
         p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
       }
