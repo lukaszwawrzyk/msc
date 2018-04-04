@@ -2,15 +2,17 @@ package pl.edu.agh.msc.availability
 
 import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.products.ProductId
+import pl.edu.agh.msc.utils.GuardedCall
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-@Singleton class AvailabilityRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
+@Singleton class AvailabilityRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, guardedCall: GuardedCall) {
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   import dbConfig._
   import profile.api._
+  import guardedCall.implicits._
 
   private case class AvailabilityRow(
     productId: Long,
@@ -33,13 +35,13 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   def find(product: ProductId)(implicit ec: ExecutionContext): Future[Option[Availability]] = db.run {
     byProductQuery(product.value).result.headOption.map(row => row.map(row => Availability(row.stock)))
-  }
+  }.guarded
 
   def save(product: ProductId, availability: Availability)(implicit ec: ExecutionContext): Future[Unit] = db.run {
     DBIO.seq(
       byProductQuery(product.value).delete,
       baseQuery += AvailabilityRow(product.value, availability.stock)
     ).transactionally
-  }
+  }.guarded
 
 }

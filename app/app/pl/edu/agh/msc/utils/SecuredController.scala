@@ -1,5 +1,6 @@
 package pl.edu.agh.msc.utils
 
+import akka.pattern.CircuitBreakerOpenException
 import com.mohiva.play.silhouette.api.Silhouette
 import com.mohiva.play.silhouette.api.actions.{ SecuredRequest, UserAwareRequest }
 import controllers.AssetsFinder
@@ -10,7 +11,8 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, Future }
+import scala.concurrent.{ Await, ExecutionContext, Future, TimeoutException }
+import scala.util.control.NonFatal
 
 abstract class SecuredController(
   components:     ControllerComponents,
@@ -47,9 +49,16 @@ class AsyncSecuredController @Inject() (
   ec:         ExecutionContext
 ) extends SecuredController(components, silhouette)(assets, ec) {
 
-  override def Secured(block: UserReq => Res): Action[AnyContent] = silhouette.SecuredAction.async(block)
-  override def UserAware(block: MaybeUserReq => Res): Action[AnyContent] = silhouette.UserAwareAction.async(block)
-  override def Unsecured(block: NoUserReq => Res): Action[AnyContent] = silhouette.UnsecuredAction.async(block)
+  override def Secured(block: UserReq => Res): Action[AnyContent] = silhouette.SecuredAction.async(withRecover(block))
+  override def UserAware(block: MaybeUserReq => Res): Action[AnyContent] = silhouette.UserAwareAction.async(withRecover(block))
+  override def Unsecured(block: NoUserReq => Res): Action[AnyContent] = silhouette.UnsecuredAction.async(withRecover(block))
+
+  private def withRecover[Req](f: Req => Res): Req => Res = { req: Req =>
+    f(req).recover {
+      case _: ServiceUnavailableException =>
+        ServiceUnavailable("Try again later")
+    }(ec)
+  }
 
 }
 

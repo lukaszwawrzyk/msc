@@ -4,6 +4,7 @@ import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.review.Rating
+import pl.edu.agh.msc.utils.GuardedCall
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
@@ -17,11 +18,12 @@ case class ProductRepoView(
   description:         String
 )
 
-@Singleton class ProductRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) {
+@Singleton class ProductRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, guardedCall: GuardedCall) {
 
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   import dbConfig._
   import profile.api._
+  import guardedCall.implicits._
 
   private case class ProductRow(
     name:                String,
@@ -52,7 +54,7 @@ case class ProductRepoView(
     byIdQuery(id.value).result.head.map { row =>
       ProductRepoView(row.name, Money(row.cachedPrice), row.photo.map(new String(_)), row.cachedAverageRating.map(Rating(_)), row.description)
     }
-  }
+  }.guarded
 
   def list(
     filtering:  Filtering,
@@ -80,7 +82,7 @@ case class ProductRepoView(
       val totalPages = count / pagination.size + (if (count % pagination.size == 0) 0 else 1)
       Paginated(pagination, totalPages, products)
     }
-  }
+  }.guarded
 
   private def toListView(row: ProductRow) = {
     ProductShort(row.name, Money(row.cachedPrice), row.photo, row.cachedAverageRating.map(Rating(_)), ProductId(row.id.value))
@@ -89,12 +91,12 @@ case class ProductRepoView(
   def update(id: ProductId, product: ProductRepoView)(implicit ec: ExecutionContext): Future[Unit] = db.run {
     import product._
     DBIO.seq(byIdQuery(id.value).update(ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description, id.value)))
-  }
+  }.guarded
 
   def insert(product: ProductRepoView)(implicit ec: ExecutionContext): Future[ProductId] = db.run {
     import product._
     val insert = insertQuery += ProductRow(name, cachedPrice.value, photo.map(_.toString), cachedAverageRating.map(_.value), description)
     insert.map(id => ProductId(id.value))
-  }
+  }.guarded
 
 }

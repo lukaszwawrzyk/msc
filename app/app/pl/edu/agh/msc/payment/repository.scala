@@ -6,19 +6,19 @@ import java.util.UUID
 import pl.edu.agh.msc.orders.Address
 import pl.edu.agh.msc.pricing.Money
 import javax.inject.{ Inject, Singleton }
-
-import pl.edu.agh.msc.utils.SlickTypeMappings
+import pl.edu.agh.msc.utils.{ GuardedCall, SlickTypeMappings }
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-@Singleton class PaymentRepository @Inject() (dbConfigProvider: DatabaseConfigProvider) extends SlickTypeMappings {
+@Singleton class PaymentRepository @Inject() (dbConfigProvider: DatabaseConfigProvider, guardedCall: GuardedCall) extends SlickTypeMappings {
 
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   protected val profile = dbConfig.profile
   import dbConfig.db
   import profile.api._
+  import guardedCall.implicits._
 
   private case class PaymentRow(
     totalPrice: BigDecimal,
@@ -86,7 +86,7 @@ import scala.concurrent.{ ExecutionContext, Future }
       basePaymentQuery += paymentRow,
       baseProductsQuery ++= productRows
     )
-  }
+  }.guarded
 
   def find(id: PaymentId)(implicit ec: ExecutionContext): Future[PaymentRequest] = db.run {
     for {
@@ -108,14 +108,14 @@ import scala.concurrent.{ ExecutionContext, Future }
         new URL(paymentRow.returnUrl)
       )
     }
-  }
+  }.guarded
 
   def getPaymentStatus(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = db.run {
     paymentStatusByIdQuery(id.value).result.head
-  }
+  }.guarded
 
   def setPaymentStatus(id: PaymentId, isPaid: Boolean)(implicit ec: ExecutionContext): Future[Unit] = db.run {
     DBIO.seq(paymentStatusByIdQuery(id.value).update(isPaid))
-  }
+  }.guarded
 
 }

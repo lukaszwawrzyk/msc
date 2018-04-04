@@ -8,9 +8,10 @@ import pl.edu.agh.msc.utils._
 class ShopModule extends AbstractModule with ScalaModule {
 
   override def configure(): Unit = {
-    bind[Time].toInstance(new RealTime)
+    bind[Time].to[RealTime].asEagerSingleton
     bind[NotificationService].to[WSNotificationService].asEagerSingleton
     bind[SecuredController].to[AsyncSecuredController]
+    bind[GuardedCall].asEagerSingleton
   }
 
 }

@@ -50,20 +50,20 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
       pricingService.find(id),
       availabilityService.find(id)
     ).mapN { (product, rating, reviews, price, availability) =>
-      val photo = product.photo.map { p =>
-        p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
+        val photo = product.photo.map { p =>
+          p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
+        }
+        ProductDetails(
+          product.name,
+          price.getOrElse(product.cachedPrice),
+          photo,
+          product.description,
+          rating.orElse(product.cachedAverageRating),
+          reviews,
+          availability,
+          id
+        )
       }
-      ProductDetails(
-        product.name,
-        price.getOrElse(product.cachedPrice),
-        photo,
-        product.description,
-        rating.orElse(product.cachedAverageRating),
-        reviews,
-        availability,
-        id
-      )
-    }
   }
 
   def updateCache(

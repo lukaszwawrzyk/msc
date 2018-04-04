@@ -66,8 +66,8 @@ class ProductController @Inject() (
       productService.findDetailed(id),
       recommendationService.forProduct(id, max = 4)
     ).mapN { (product, recommendations) =>
-      Ok(views.html.productDetails(product, recommendations))
-    }
+        Ok(views.html.productDetails(product, recommendations))
+      }
   }
 
   def review(id: ProductId) = Secured { implicit request =>
