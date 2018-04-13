@@ -6,7 +6,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 
 class BaseSimulation extends Simulation {
-  private val baseUrl = "http://192.168.1.1:9000"
+  private val baseUrl = "http://192.168.1.2:9000"
 
   val random = new Random(lastProductId = 501)
 
@@ -31,32 +31,49 @@ class StandardUsage extends BaseSimulation {
   val pauseTime = 1.second.toMillis
 
   setUp(
-    buying.repeating.inject(
+    browsing.repeating.inject(
       rampUsers(1400) over simulationTime
     ).customPauses(pauseTime),
-    browsing.repeating.inject(
+    buying.repeating.inject(
       rampUsers(100) over simulationTime
     ).customPauses(pauseTime)
   ).protocols(httpProtocol).maxDuration(simulationTime)
 
 }
 
+// this will cause ConnectException with timeout, application being not able to even handle this number of connections
+class ALotOfUsers extends BaseSimulation {
+
+  val simulationTime = 5.minutes
+  val pauseTime = 500.millis
+
+  setUp(
+    browsing.single.inject(
+      constantUsersPerSec(50) during simulationTime
+    ).customPauses(pauseTime.toMillis),
+    buying.single.inject(
+      constantUsersPerSec(10) during simulationTime
+    ).customPauses(pauseTime.toMillis)
+  ).protocols(httpProtocol).maxDuration(simulationTime)
+
+}
 
 class HighLoad extends BaseSimulation {
 
   val simulationTime = 5.minutes
-  val pauseTime = 1.second.toMillis
+  val pauseTime = 500.millis
 
   setUp(
-    buying.repeating.inject(
-      rampUsers(20000) over simulationTime
-    ).customPauses(pauseTime),
     browsing.repeating.inject(
-      rampUsers(2000) over simulationTime
-    ).customPauses(pauseTime)
+      rampUsers(500) over simulationTime
+    ).customPauses(pauseTime.toMillis),
+    buying.repeating.inject(
+      rampUsers(50) over simulationTime
+    ).customPauses(pauseTime.toMillis)
   ).protocols(httpProtocol).maxDuration(simulationTime)
 
 }
+
 
 
 class HighBuyerLoad extends BaseSimulation {
