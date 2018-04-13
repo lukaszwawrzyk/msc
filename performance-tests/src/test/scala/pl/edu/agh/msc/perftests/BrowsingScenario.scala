@@ -2,6 +2,7 @@ package pl.edu.agh.msc.perftests
 
 import io.gatling.core.Predef._
 import scala.concurrent.duration._
+import CommonActions._
 
 class BrowsingScenario(random: Random) {
 
@@ -14,8 +15,6 @@ class BrowsingScenario(random: Random) {
 	val openSearchPage = exec(get("Products no query", "/products")).pause(10, 30)
 
 	def searchProducts(name: String) = exec(get("Products by name", s"/products?text=$name"))
-
-	def productDetails(id: String) = exec(get("Products details", s"/products/$id"))
 
 	val searchStrings = Seq("Small", "Ergonomic", "Rustic", "Intelligent", "Gorgeous", "Incredible", "Fantastic", "Practical", "Sleek", "Awesome", "Enormous", "Mediocre", "Synergistic", "Heavy Duty", "Lightweight", "Aerodynamic", "Durable", "Steel", "Wooden", "Concrete", "Plastic", "Cotton", "Granite", "Rubber", "Leather", "Silk", "Wool", "Linen", "Marble", "Iron", "Bronze", "Copper", "Aluminum", "Paper", "Chair", "Car", "Computer", "Gloves", "Pants", "Shirt", "Table", "Shoes", "Hat", "Plate", "Knife", "Bottle", "Coat", "Lamp", "Keyboard", "Bag", "Bench", "Clock", "Watch", "Wallet")
 

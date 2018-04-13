@@ -1,6 +1,7 @@
 package pl.edu.agh.msc.perftests
 
 import io.gatling.core.Predef._
+import io.gatling.core.structure.PopulationBuilder
 import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
@@ -21,56 +22,63 @@ class BaseSimulation extends Simulation {
     .userAgentHeader("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36 OPR/51.0.2830.55")
     .headers(headers)
 
-  def buying = new BuyingScenario(random)
-  def browsing = new BrowsingScenario(random)
+  object scenario {
+    def buying = new BuyingScenario(random)
+    def browsing = new BrowsingScenario(random)
+    def details = new DetailsScenario(random)
+  }
+
+  def simulationTime = 5.minutes
+
+  override def setUp(populationBuilders: List[PopulationBuilder]): SetUp = {
+    super.setUp(populationBuilders).protocols(httpProtocol).maxDuration(simulationTime)
+  }
 }
 
 class StandardUsage extends BaseSimulation {
 
-  val simulationTime = 10.minutes
+  override val simulationTime = 10.minutes
   val pauseTime = 1.second.toMillis
 
   setUp(
-    browsing.repeating.inject(
+    scenario.browsing.repeating.inject(
       rampUsers(1400) over simulationTime
     ).customPauses(pauseTime),
-    buying.repeating.inject(
+    scenario.buying.repeating.inject(
       rampUsers(100) over simulationTime
     ).customPauses(pauseTime)
-  ).protocols(httpProtocol).maxDuration(simulationTime)
+  )
 
 }
 
 // this will cause ConnectException with timeout, application being not able to even handle this number of connections
 class ALotOfUsers extends BaseSimulation {
 
-  val simulationTime = 5.minutes
   val pauseTime = 500.millis
 
   setUp(
-    browsing.single.inject(
+    scenario.browsing.single.inject(
       constantUsersPerSec(50) during simulationTime
     ).customPauses(pauseTime.toMillis),
-    buying.single.inject(
+    scenario.buying.single.inject(
       constantUsersPerSec(10) during simulationTime
     ).customPauses(pauseTime.toMillis)
-  ).protocols(httpProtocol).maxDuration(simulationTime)
+  )
 
 }
 
 class HighLoad extends BaseSimulation {
 
-  val simulationTime = 5.minutes
   val pauseTime = 500.millis
 
   setUp(
-    browsing.repeating.inject(
+    scenario.browsing.repeating.inject(
       rampUsers(500) over simulationTime
     ).customPauses(pauseTime.toMillis),
-    buying.repeating.inject(
+    scenario.buying.repeating.inject(
       rampUsers(50) over simulationTime
     ).customPauses(pauseTime.toMillis)
-  ).protocols(httpProtocol).maxDuration(simulationTime)
+  )
 
 }
 
@@ -78,13 +86,22 @@ class HighLoad extends BaseSimulation {
 
 class HighBuyerLoad extends BaseSimulation {
 
-  val simulationTime = 5.minutes
   val pauseTime = 200.millis.toMillis
 
   setUp(
-    buying.repeating.inject(
+    scenario.buying.repeating.inject(
       rampUsers(10000) over simulationTime
     ).customPauses(pauseTime)
-  ).protocols(httpProtocol).maxDuration(simulationTime)
+  )
+
+}
+
+class DisplayDetails extends BaseSimulation {
+
+  setUp(
+    scenario.details.repeating.inject(
+      rampUsers(500) over simulationTime
+    )
+  )
 
 }
