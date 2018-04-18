@@ -63,16 +63,16 @@ case class ProductRepoView(
   )(implicit ec: ExecutionContext): Future[Paginated[ProductShort]] = db.run {
     val filteredQuery = baseQuery.filter { p =>
       filtering.minRating.map(minRating => p.cachedAverageRating >= minRating.value).getOrElse(LiteralColumn(true).?) &&
-        filtering.text.map(_.toLowerCase).map(text => p.name.toLowerCase like s"%$text%").getOrElse(LiteralColumn(true)) &&
+        filtering.text.map(_.toLowerCase).map(text => (p.name.toLowerCase like s"%$text%") || (p.description.toLowerCase like s"%$text%")).getOrElse(LiteralColumn(true)) &&
         filtering.priceRange.map {
           case PriceRange(from, to) =>
             p.cachedPrice >= from.map(_.value) && p.cachedPrice <= to.map(_.value)
         }.map(_.getOrElse(true)).getOrElse(LiteralColumn(true))
     }
 
-    val sortedQuery = if (sorting.byNameAsc) filteredQuery.sortBy(p => p.name.asc) else filteredQuery
-    val finalQuery = sortedQuery
-      .drop((pagination.page - 1) * pagination.size).take(pagination.size)
+    val finalQuery = filteredQuery.sortBy { p =>
+      if (sorting.byNameAsc) p.name.asc else p.name.desc
+    }.drop((pagination.page - 1) * pagination.size).take(pagination.size)
 
     for {
       rows <- finalQuery.result

@@ -110,11 +110,8 @@ create table "payment_products" (
   FOREIGN KEY ("payment_id") REFERENCES "payments"("id")
 );
 
-create index product_search_index on "products" ("cached_average_rating", "name");
-
 # --- !Downs
 
-drop index product_search_index;
 drop table "payment_products";
 drop table "payments";
 drop table "cart_items";
