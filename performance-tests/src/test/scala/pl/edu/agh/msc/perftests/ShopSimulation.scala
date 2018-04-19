@@ -7,7 +7,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 
 class BaseSimulation extends Simulation {
-  private val baseUrl = "http://192.168.1.2:9000"
+  private val baseUrl = "http://192.168.1.1:9000"
 
   val random = new Random(lastProductId = 501)
 
@@ -82,6 +82,40 @@ class HighLoad extends BaseSimulation {
 
 }
 
+/*
+class CircuitBreakerTest extends BaseSimulation {
+
+  override val simulationTime = 3.minutes
+  val pauseTime = 200.millis.toMillis
+
+  setUp(
+    scenario.browsing.single.inject(
+      constantUsersPerSec(200) during simulationTime
+    ).customPauses(pauseTime).throttle(
+      reachRps(200) in 1.minute,
+      holdFor(30.seconds),
+      reachRps(100) in 1.minute,
+      holdFor(1.minute)
+    )
+  )
+
+}
+*/
+
+
+class CircuitBreakerTest extends BaseSimulation {
+
+  override val simulationTime = 4.minutes
+  val pauseTime = 200.millis.toMillis
+
+	setUp(
+		scenario.browsing.single.inject(
+			constantUsersPerSec(15) during 2.minutes,
+			constantUsersPerSec( 6) during 2.minutes
+		).customPauses(pauseTime)
+	)
+
+}
 
 
 class HighBuyerLoad extends BaseSimulation {
