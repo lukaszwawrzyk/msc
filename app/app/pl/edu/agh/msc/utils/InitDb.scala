@@ -36,7 +36,7 @@ class InitDb @Inject() (
     else createAndSaveProduct().flatMap(_ => run(left - 1))
   }
 
-  productService.list(Filtering(), Pagination(1, 1)).flatMap { res =>
+  productService.listNonCached(Filtering(), Pagination(1, 1)).flatMap { res =>
     if (res.data.isEmpty) run(500).map(_ => println("Initialized")) else Future.successful(println("Already initialized"))
   }
 
