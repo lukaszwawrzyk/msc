@@ -7,7 +7,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 
 class BaseSimulation extends Simulation {
-  private val baseUrl = "http://192.168.1.1:9000"
+  private val baseUrl = "http://mscth.eu-west-2.elasticbeanstalk.com"
 
   val random = new Random(lastProductId = 501)
 
