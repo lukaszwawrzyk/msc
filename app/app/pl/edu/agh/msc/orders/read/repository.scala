@@ -1,9 +1,10 @@
-package pl.edu.agh.msc.orders
+package pl.edu.agh.msc.orders.read
 
 import java.time.LocalDateTime
 import java.util.UUID
-import javax.inject.{ Inject, Singleton }
 
+import javax.inject.{ Inject, Singleton }
+import pl.edu.agh.msc.orders._
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.ProductId
 import pl.edu.agh.msc.utils.SlickTypeMappings

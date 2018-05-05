@@ -24,11 +24,21 @@ resolvers ++= Seq(
   Resolver.sonatypeRepo("snapshots")
 )
 
+def akka(module: String, version: String = "2.5.12") = "com.typesafe.akka" %% s"akka-$module" % version
+
 libraryDependencies ++= Seq(
   ehcache,
   guice,
   filters,
   ws,
+
+  akka("persistence"),
+  akka("persistence-query"),
+  akka("actor"),
+  akka("http-core", version = "10.1.1"),
+  akka("slf4j"),
+
+  "org.fusesource.leveldbjni" % "leveldbjni-all"        % "1.8",
 
   "com.mohiva"             %% "play-silhouette"                 % "5.0.0",
   "com.mohiva"             %% "play-silhouette-password-bcrypt" % "5.0.0",
