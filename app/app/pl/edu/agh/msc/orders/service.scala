@@ -3,17 +3,20 @@ package pl.edu.agh.msc.orders
 import java.util.UUID
 
 import javax.inject.{ Inject, Singleton }
-import pl.edu.agh.msc.orders.read.OrdersRepository
+import pl.edu.agh.msc.orders.read.{ OrdersEventMapper, OrdersRepository }
 import pl.edu.agh.msc.orders.write.{ OrderEntity, OrderEntityFacade }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class OrdersService @Inject() (
   ordersRepository:  OrdersRepository,
-  orderEntityFacade: OrderEntityFacade
+  orderEntityFacade: OrderEntityFacade,
+  ordersEventMapper: OrdersEventMapper
 ) {
 
   private type Ack = OrderEntity.Ack.type
+
+  ordersEventMapper.run()
 
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = {
     ordersRepository.find(id)

@@ -4,6 +4,7 @@ import java.util.UUID
 
 import akka.pattern._
 import akka.persistence.PersistentActor
+import akka.persistence.journal.Tagged
 import pl.edu.agh.msc.cart.CartService
 import pl.edu.agh.msc.orders._
 import pl.edu.agh.msc.orders.write.OrderEntity._
@@ -37,7 +38,7 @@ object OrderEntity {
   final case class ConfirmOrder() extends Command
   final case class PayOrder() extends Command
 
-  private case class InitialOrder(order: Order)
+  private case class DelayedResult(value: Any)
 
   case object Ack
 
@@ -58,33 +59,37 @@ class OrderEntity(
 
   override def receiveCommand: Receive = {
     case CreateOrder(draft, user) =>
-      val persistentSender = sender()
-      createInitialOrder(draft, user) pipeTo self
-      context.become {
-        case InitialOrder(order) =>
-          persist(OrderCreated(order)){ e =>
-            applyEvent(e)
-            cartService.clear(user)
-            persistentSender ! Ack
-          }
-          unstashAll()
-          context.unbecome()
-        case _ => stash()
-      }
+      handleDelayed(createInitialOrder(draft, user))(OrderCreated(_))(sideEffect = cartService.clear(user))
     case ConfirmOrder() =>
-      val persistentSender = sender()
-      persist(OrderConfirmed(id)) { e =>
-        println("actually confirmed order")
-        applyEvent(e)
-        persistentSender ! Ack
-      }
+      handlePure(OrderConfirmed(id))
     case PayOrder() =>
-      val persistentSender = sender()
-      persist(OrderPaid(id)) { e =>
-        println("actually paid order")
-        applyEvent(e)
-        persistentSender ! Ack
-      }
+      handlePure(OrderPaid(id))
+  }
+
+  private def handlePure(event: Event): Unit = {
+    val persistentSender = sender()
+    persist(event) { e =>
+      println(s"persisting $event")
+      applyEvent(e)
+      persistentSender ! Ack
+    }
+  }
+
+  private def handleDelayed[A](initialLogic: Future[A])(event: A => Event)(sideEffect: => Unit) = {
+    val persistentSender = sender()
+    initialLogic.map(DelayedResult) pipeTo self
+    context.become({
+      case DelayedResult(res: A @unchecked) =>
+        persist(event(res)) { e =>
+          println(s"persisting $e")
+          applyEvent(e)
+          sideEffect
+          persistentSender ! Ack
+        }
+        unstashAll()
+        context.unbecome()
+      case _ => stash()
+    }, discardOld = false)
   }
 
   override def receiveRecover: Receive = {
@@ -103,7 +108,7 @@ class OrderEntity(
     f(e)
   }
 
-  private def createInitialOrder(draft: OrderDraft, user: UUID): Future[InitialOrder] = {
+  private def createInitialOrder(draft: OrderDraft, user: UUID): Future[Order] = {
     for {
       items <- Future.traverse(draft.cart.items) { cartItem =>
         productService.price(cartItem.product).map { price =>
@@ -120,7 +125,11 @@ class OrderEntity(
       )
     } yield {
       println("actually created inital order")
-      InitialOrder(order)
+      order
     }
+  }
+
+  override def persist[A](event: A)(handler: A => Unit): Unit = {
+    super.persist(Tagged(event, Set("orders"))) { case Tagged(event: A @unchecked, _) => handler(event) }
   }
 }
