@@ -1,5 +1,8 @@
 package pl.edu.agh.msc.utils.cqrs
 
+import java.util.UUID
+
+import akka.persistence.query.TimeBasedUUID
 import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
@@ -15,16 +18,14 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   private case class OffsetRow(
     name:  String,
-    value: Long
+    value: Option[UUID]
   )
 
   private class Offsets(tag: Tag) extends Table[OffsetRow](tag, "offsets") {
     def name = column[String]("name", O.PrimaryKey)
-    def value = column[Long]("value")
+    def value = column[Option[UUID]]("value")
     def * = (name, value).mapTo[OffsetRow]
   }
-
-  private val Initial = 0L
 
   private val baseQuery = TableQuery[Offsets]
 
@@ -35,17 +36,17 @@ import scala.concurrent.{ ExecutionContext, Future }
     baseQuery.filter(_.name === name).map(_.value)
   }
 
-  def getOrCreate(name: String)(implicit ec: ExecutionContext): Future[Long] = db.run {
-    byNameQuery(name).result.headOption.flatMap[Long, NoStream, Nothing] {
+  def getOrCreate(name: String)(implicit ec: ExecutionContext): Future[Option[TimeBasedUUID]] = db.run {
+    byNameQuery(name).result.headOption.flatMap[Option[TimeBasedUUID], NoStream, Nothing] {
       case Some(offset) =>
-        DBIO.successful(offset.value)
+        DBIO.successful(offset.value.map(TimeBasedUUID))
       case None =>
-        (baseQuery += OffsetRow(name, Initial)).map(_ => Initial)
+        (baseQuery += OffsetRow(name, None)).map(_ => None)
     }
   }
 
-  def set(name: String, value: Long)(implicit ec: ExecutionContext): Future[Unit] = db.run {
-    valueByNameQuery(name).update(value).map(_ => ())
+  def set(name: String, offset: TimeBasedUUID)(implicit ec: ExecutionContext): Future[Unit] = db.run {
+    valueByNameQuery(name).update(Some(offset.value)).map(_ => ())
   }
 
 }

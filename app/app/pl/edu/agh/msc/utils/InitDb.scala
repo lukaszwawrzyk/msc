@@ -31,9 +31,11 @@ class InitDb @Inject() (
 
   println("Initializing data")
   def run(left: Int): Future[ProductId] = {
-    println(s"creating, $left left")
-    if (left == 0) createAndSaveProduct()
-    else createAndSaveProduct().flatMap(_ => run(left - 1))
+    if (left == 0) {
+      createAndSaveProduct()
+    } else {
+      createAndSaveProduct().flatMap(_ => run(left - 1))
+    }
   }
 
   productService.list(Filtering(), Pagination(1, 1)).flatMap { res =>

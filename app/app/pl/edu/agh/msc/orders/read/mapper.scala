@@ -1,8 +1,8 @@
 package pl.edu.agh.msc.orders.read
 
 import akka.actor.ActorSystem
-import akka.persistence.query.journal.leveldb.scaladsl.LeveldbReadJournal
-import akka.persistence.query.{ PersistenceQuery, Sequence }
+import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
+import akka.persistence.query.{ Offset, PersistenceQuery, Sequence, TimeBasedUUID }
 import akka.stream.scaladsl.Sink
 import akka.stream.{ ActorMaterializer, Materializer }
 import javax.inject.{ Inject, Singleton }
@@ -19,7 +19,7 @@ import scala.concurrent.Future
 ) {
 
   private val entityTag = "orders"
-  private val readJournal = PersistenceQuery(system).readJournalFor[LeveldbReadJournal](LeveldbReadJournal.Identifier)
+  private val readJournal = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 
   import system.dispatcher
 
@@ -27,11 +27,13 @@ import scala.concurrent.Future
     offsetRepository.getOrCreate(entityTag).foreach { initialOffset =>
       implicit val mat: Materializer = ActorMaterializer()(system)
       readJournal
-        .eventsByTag(entityTag, Sequence(initialOffset))
+        .eventsByTag(entityTag, initialOffset.getOrElse(Offset.noOffset))
         .mapAsync(1) { envelope =>
-          process(envelope.event.asInstanceOf[OrderEntity.Event]).map(_ => envelope.offset)
+          process(envelope.event.asInstanceOf[OrderEntity.Event])
+            .recover { case e: Exception => println(s"Exception while applying event: $e") }
+            .map(_ => envelope.offset)
         }.mapAsync(1) {
-          case Sequence(offset) =>
+          case offset: TimeBasedUUID =>
             offsetRepository.set(entityTag, offset)
         }.runWith(Sink.ignore)
     }

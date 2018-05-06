@@ -1,16 +1,17 @@
 package pl.edu.agh.msc.ui.controllers
 
 import java.net.URL
-import javax.inject.Inject
 
+import javax.inject.Inject
 import pl.edu.agh.msc.cart.{ Cart, CartItem }
-import pl.edu.agh.msc.orders.{ Address, OrderDraft, OrderId, OrdersService }
+import pl.edu.agh.msc.orders._
 import pl.edu.agh.msc.payment.{ PaymentRequest, PaymentService, Product }
 import pl.edu.agh.msc.products.{ ProductId, ProductService }
 import pl.edu.agh.msc.ui.views
 import pl.edu.agh.msc.utils._
 import play.api.data.Forms._
 import play.api.data.{ Form, Mapping }
+import play.api.mvc.Result
 
 import scala.concurrent.Future
 
@@ -53,19 +54,12 @@ class OrderController @Inject() (
   def draft = Secured { implicit request =>
     orderForm.bindFromRequest.fold(
       e => Future.successful(BadRequest(e.errors.toString)),
-      orderDraft => ordersService.saveDraft(orderDraft, request.identity.id).map { id =>
-        Redirect(routes.OrderController.view(id))
-      }
+      orderDraft => ordersService.saveDraft(orderDraft, request.identity.id).flatMap(orderDetailsView)
     )
   }
 
   def view(id: OrderId) = Secured { implicit request =>
-    for {
-      order <- ordersService.find(id)
-      products <- buildMap(order.items.map(_.product))(productService.findShort)
-    } yield {
-      Ok(views.html.orderDetails(order, products))
-    }
+    ordersService.find(id).flatMap(orderDetailsView)
   }
 
   def list() = Secured { implicit request =>
@@ -91,6 +85,14 @@ class OrderController @Inject() (
 
   def paid(id: OrderId) = UserAware { implicit request =>
     ordersService.paymentConfirmed(id).map(_ => Ok)
+  }
+
+  private def orderDetailsView(order: Order)(implicit r: UserReq): Res = {
+    for {
+      products <- buildMap(order.items.map(_.product))(productService.findShort)
+    } yield {
+      Ok(views.html.orderDetails(order, products))
+    }
   }
 
 }

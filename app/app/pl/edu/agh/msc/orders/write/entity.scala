@@ -4,13 +4,14 @@ import java.util.UUID
 
 import akka.pattern._
 import akka.persistence.PersistentActor
-import akka.persistence.journal.Tagged
+import akka.persistence.journal.{ EventSeq, Tagged }
 import pl.edu.agh.msc.cart.CartService
 import pl.edu.agh.msc.orders._
 import pl.edu.agh.msc.orders.write.OrderEntity._
 import pl.edu.agh.msc.products.ProductService
 import pl.edu.agh.msc.utils.Time
 
+import scala.collection.immutable.Set
 import scala.concurrent.Future
 
 case class State(
@@ -59,7 +60,7 @@ class OrderEntity(
 
   override def receiveCommand: Receive = {
     case CreateOrder(draft, user) =>
-      handleDelayed(createInitialOrder(draft, user))(OrderCreated(_))(sideEffect = cartService.clear(user))
+      handleDelayed(createInitialOrder(draft, user))(OrderCreated(_))(sideEffect = cartService.clear(user))(identity)
     case ConfirmOrder() =>
       handlePure(OrderConfirmed(id))
     case PayOrder() =>
@@ -68,23 +69,21 @@ class OrderEntity(
 
   private def handlePure(event: Event): Unit = {
     val persistentSender = sender()
-    persist(event) { e =>
-      println(s"persisting $event")
+    emit(event) { e =>
       applyEvent(e)
       persistentSender ! Ack
     }
   }
 
-  private def handleDelayed[A](initialLogic: Future[A])(event: A => Event)(sideEffect: => Unit) = {
+  private def handleDelayed[A](initialLogic: Future[A])(event: A => Event)(sideEffect: => Unit)(response: A => Any): Unit = {
     val persistentSender = sender()
     initialLogic.map(DelayedResult) pipeTo self
     context.become({
       case DelayedResult(res: A @unchecked) =>
-        persist(event(res)) { e =>
-          println(s"persisting $e")
+        emit(event(res)) { e =>
           applyEvent(e)
           sideEffect
-          persistentSender ! Ack
+          persistentSender ! response(res)
         }
         unstashAll()
         context.unbecome()
@@ -94,18 +93,15 @@ class OrderEntity(
 
   override def receiveRecover: Receive = {
     case event: Event =>
-      println(s"recovering $event")
+      applyEvent(event)
+    case t @ Tagged(event: Event, _) =>
       applyEvent(event)
   }
 
-  private val applyEvent: Event => Unit = { e =>
-    println(s"applying $e")
-    val f: Event => Unit = {
-      case OrderCreated(order) => state = State.create(order)
-      case OrderConfirmed(_)   => state = state.withStatus(OrderStatus.Confirmed)
-      case OrderPaid(_)        => state = state.withStatus(OrderStatus.Paid)
-    }
-    f(e)
+  private val applyEvent: Event => Unit = {
+    case OrderCreated(order) => state = State.create(order)
+    case OrderConfirmed(_)   => state = state.withStatus(OrderStatus.Confirmed)
+    case OrderPaid(_)        => state = state.withStatus(OrderStatus.Paid)
   }
 
   private def createInitialOrder(draft: OrderDraft, user: UUID): Future[Order] = {
@@ -124,12 +120,13 @@ class OrderEntity(
         date = time.now()
       )
     } yield {
-      println("actually created inital order")
       order
     }
   }
 
-  override def persist[A](event: A)(handler: A => Unit): Unit = {
-    super.persist(Tagged(event, Set("orders"))) { case Tagged(event: A @unchecked, _) => handler(event) }
+  private def emit[A](event: A)(handler: A => Unit): Unit = {
+    persist(event)(e => {
+      handler(e)
+    })
   }
 }

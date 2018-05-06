@@ -26,9 +26,9 @@ import scala.concurrent.{ ExecutionContext, Future }
     ordersRepository.findByUser(user)
   }
 
-  def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[OrderId] = {
+  def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[Order] = {
     val id = OrderId(UUID.randomUUID())
-    orderEntityFacade.ask[Ack](id, OrderEntity.CreateOrder(orderDraft, user)).map(_ => id)
+    orderEntityFacade.ask[Order](id, OrderEntity.CreateOrder(orderDraft, user))
   }
 
   def confirm(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {

@@ -34,11 +34,10 @@ libraryDependencies ++= Seq(
 
   akka("persistence"),
   akka("persistence-query"),
+  akka("persistence-cassandra", version = "0.84"),
   akka("actor"),
   akka("http-core", version = "10.1.1"),
   akka("slf4j"),
-
-  "org.fusesource.leveldbjni" % "leveldbjni-all"        % "1.8",
 
   "com.mohiva"             %% "play-silhouette"                 % "5.0.0",
   "com.mohiva"             %% "play-silhouette-password-bcrypt" % "5.0.0",

@@ -33,8 +33,7 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
     )
 
     // WHEN
-    val id = ordersService.saveDraft(draft, john).await()
-    val order = ordersService.find(id).await()
+    val order = ordersService.saveDraft(draft, john).await()
 
     // THEN
     order.address shouldBe Address(
@@ -60,15 +59,15 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
     )
 
     // WHEN
-    val id = ordersService.saveDraft(draft, john).await()
-    ordersService.confirm(id).await()
-    val order = ordersService.find(id).await()
+    val order = ordersService.saveDraft(draft, john).await()
+    ordersService.confirm(order.id).await()
+    val finalOrder = ordersService.find(order.id).await()
 
     // THEN
-    order.status shouldBe OrderStatus.Confirmed
-    order.items shouldBe Seq(LineItem(laptop, amount = 2, price = Money(2200)))
-    order.date shouldBe currentTime
-    order.buyer shouldBe john
+    finalOrder.status shouldBe OrderStatus.Confirmed
+    finalOrder.items shouldBe Seq(LineItem(laptop, amount = 2, price = Money(2200)))
+    finalOrder.date shouldBe currentTime
+    finalOrder.buyer shouldBe john
   }
 
   it should "return list of historical orders" in {
@@ -78,24 +77,24 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
     val tablet = createAndSaveProduct(name  = "Tablet", price = Money(800)).await()
     val address = createAddress()
 
-    val laptopOrder = OrderDraft(
+    val laptopOrderDraft = OrderDraft(
       Cart(Seq(CartItem(laptop, amount = 2))),
       address
     )
 
-    val tabletOrder = OrderDraft(
+    val tabletOrderDraft = OrderDraft(
       Cart(Seq(CartItem(tablet, amount = 1))),
       address
     )
 
     // WHEN
     time.set(march)
-    val laptopOrderId = ordersService.saveDraft(laptopOrder, john).await()
-    ordersService.confirm(laptopOrderId).await()
+    val laptopOrder = ordersService.saveDraft(laptopOrderDraft, john).await()
+    ordersService.confirm(laptopOrder.id).await()
 
     time.set(june)
-    val tabletOrderId = ordersService.saveDraft(tabletOrder, john).await()
-    ordersService.confirm(tabletOrderId).await()
+    val tabletOrder = ordersService.saveDraft(tabletOrderDraft, john).await()
+    ordersService.confirm(tabletOrder.id).await()
 
     val orders = ordersService.historical(john).await()
 
@@ -104,11 +103,11 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
       case Seq(later, earlier) =>
         later.items.loneElement shouldBe LineItem(tablet, amount = 1, Money(800))
         later.date shouldBe june
-        later.id shouldBe tabletOrderId
+        later.id shouldBe tabletOrder.id
 
         earlier.items.loneElement shouldBe LineItem(laptop, amount = 2, Money(2200))
         earlier.date shouldBe march
-        earlier.id shouldBe laptopOrderId
+        earlier.id shouldBe laptopOrder.id
     }
   }
 
@@ -122,7 +121,7 @@ class OrderSpec extends IntegrationTest with Inside with LoneElement with Produc
     )
 
     // WHEN
-    val id = ordersService.saveDraft(draft, john).await()
+    val id = ordersService.saveDraft(draft, john).await().id
     ordersService.confirm(id).await()
     ordersService.paymentConfirmed(id).await()
     val order = ordersService.find(id).await()

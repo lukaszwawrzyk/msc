@@ -23,8 +23,7 @@ class CartSpec extends IntegrationTest with ProductFactories with UserFactories 
     cartService.add(client, pot, amount = 3).await()
     val cart = cartService.get(client).await()
     val orderDraft = OrderDraft(cart, createAddress())
-    val orderId = ordersService.saveDraft(orderDraft, client).await()
-    val order = ordersService.find(orderId).await()
+    val order = ordersService.saveDraft(orderDraft, client).await()
     val cartAfterConfirming = cartService.get(client).await()
 
     // THEN
