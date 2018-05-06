@@ -9,12 +9,12 @@ import pl.edu.agh.msc.orders.write.{ OrderEntitiesFacade, OrderEntity }
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class OrdersService @Inject() (
-  ordersRepository:  OrdersRepository,
-  entitiesFacade:    OrderEntitiesFacade,
-  ordersEventMapper: OrdersEventMapper
+  ordersRepository: OrdersRepository,
+  entitiesFacade:   OrderEntitiesFacade,
+  eventMapper:      OrdersEventMapper
 ) {
 
-  ordersEventMapper.run()
+  eventMapper.run()
 
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = {
     ordersRepository.find(id)

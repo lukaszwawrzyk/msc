@@ -2,6 +2,7 @@ package pl.edu.agh.msc.ui.controllers
 
 import java.net.URL
 
+import akka.actor.ActorSystem
 import javax.inject.Inject
 import pl.edu.agh.msc.cart.{ Cart, CartItem }
 import pl.edu.agh.msc.orders._
@@ -11,16 +12,16 @@ import pl.edu.agh.msc.ui.views
 import pl.edu.agh.msc.utils._
 import play.api.data.Forms._
 import play.api.data.{ Form, Mapping }
-import play.api.mvc.Result
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class OrderController @Inject() (
-  sc:     SecuredController,
+  sc:             SecuredController,
   ordersService:  OrdersService,
   productService: ProductService,
   paymentService: PaymentService
-){
+)(implicit val system: ActorSystem){
 
   import sc._
 
@@ -80,6 +81,7 @@ class OrderController @Inject() (
         order.items.map(item => Product(products(item.product).name, item.price, item.amount)),
         new URL(routes.OrderController.paid(id).absoluteURL())
       ))
+      _ <- Future.delay(500.millis)
     } yield Redirect(routes.PaymentController.view(paymentId))
   }
 

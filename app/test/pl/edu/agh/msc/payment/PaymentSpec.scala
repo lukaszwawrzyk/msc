@@ -5,6 +5,7 @@ import java.net.URL
 import pl.edu.agh.msc.common.IntegrationTest
 import pl.edu.agh.msc.orders.OrderFactories
 import pl.edu.agh.msc.pricing.Money
+import pl.edu.agh.msc.utils.NotificationService
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder

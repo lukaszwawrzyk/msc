@@ -33,9 +33,14 @@ abstract class Entity[Id, Command: ClassTag, Event: ClassTag] extends Persistent
   def handleCommand: Command => Unit
 
   protected def handlePure(event: Event): Unit = {
+    handleEffect(event)(())
+  }
+
+  protected def handleEffect(event: Event)(sideEffect: => Unit): Unit = {
     val persistentSender = sender()
     emit(event) { e =>
       applyEvent(e)
+      sideEffect
       persistentSender ! Entity.Ack
     }
   }

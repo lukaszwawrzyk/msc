@@ -1,12 +1,12 @@
-package pl.edu.agh.msc.payment
+package pl.edu.agh.msc.payment.read
 
 import java.net.URL
 import java.util.UUID
 
-import pl.edu.agh.msc.orders.Address
-import pl.edu.agh.msc.pricing.Money
 import javax.inject.{ Inject, Singleton }
-
+import pl.edu.agh.msc.orders.Address
+import pl.edu.agh.msc.payment.{ PaymentId, PaymentRequest, Product }
+import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.utils.SlickTypeMappings
 import play.api.db.slick.DatabaseConfigProvider
 import slick.jdbc.JdbcProfile

@@ -31,11 +31,15 @@ object OrderEntity extends EntityCompanion {
       require(status != order.get.status)
       State(order.map(_.copy(status = status)))
     }
+    def create(initialOrder: Order): State = {
+      require(order.isEmpty)
+      require(initialOrder.status == OrderStatus.Unconfirmed)
+      State(Some(initialOrder))
+    }
   }
 
   private object State {
     def notCreated = State(None)
-    def create(order: Order) = State(Some(order))
   }
 
 }
@@ -53,7 +57,7 @@ class OrderEntity(
 
   private var state = State.notCreated
 
-  override def handleCommand = {
+  override val handleCommand = {
     case CreateOrder(draft, user) =>
       handleDelayed(createInitialOrder(draft, user))(OrderCreated(_))(sideEffect = cartService.clear(user))(identity)
     case ConfirmOrder() =>
@@ -63,7 +67,7 @@ class OrderEntity(
   }
 
   override val applyEvent = {
-    case OrderCreated(order) => state = State.create(order)
+    case OrderCreated(order) => state = state.create(order)
     case OrderConfirmed(_)   => state = state.withStatus(OrderStatus.Confirmed)
     case OrderPaid(_)        => state = state.withStatus(OrderStatus.Paid)
   }
