@@ -4,17 +4,15 @@ import java.util.UUID
 
 import javax.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.orders.read.{ OrdersEventMapper, OrdersRepository }
-import pl.edu.agh.msc.orders.write.{ OrderEntity, OrderEntityFacade }
+import pl.edu.agh.msc.orders.write.{ OrderEntitiesFacade, OrderEntity }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class OrdersService @Inject() (
   ordersRepository:  OrdersRepository,
-  orderEntityFacade: OrderEntityFacade,
+  entitiesFacade:    OrderEntitiesFacade,
   ordersEventMapper: OrdersEventMapper
 ) {
-
-  private type Ack = OrderEntity.Ack.type
 
   ordersEventMapper.run()
 
@@ -28,15 +26,15 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[Order] = {
     val id = OrderId(UUID.randomUUID())
-    orderEntityFacade.ask[Order](id, OrderEntity.CreateOrder(orderDraft, user))
+    entitiesFacade.ask[Order](id, OrderEntity.CreateOrder(orderDraft, user))
   }
 
   def confirm(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    orderEntityFacade.ask[Ack](id, OrderEntity.ConfirmOrder()).map(_ => ())
+    entitiesFacade.call(id, OrderEntity.ConfirmOrder())
   }
 
   def paymentConfirmed(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    orderEntityFacade.ask[Ack](id, OrderEntity.PayOrder()).map(_ => ())
+    entitiesFacade.call(id, OrderEntity.PayOrder())
   }
 
 }
