@@ -26,15 +26,15 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[Order] = {
     val id = OrderId(UUID.randomUUID())
-    entitiesFacade.ask[Order](id, OrderEntity.CreateOrder(orderDraft, user))
+    entitiesFacade.ask[Order](OrderEntity.CreateOrder(id, orderDraft, user))
   }
 
   def confirm(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    entitiesFacade.call(id, OrderEntity.ConfirmOrder())
+    entitiesFacade.call(OrderEntity.ConfirmOrder(id))
   }
 
   def paymentConfirmed(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    entitiesFacade.call(id, OrderEntity.PayOrder())
+    entitiesFacade.call(OrderEntity.PayOrder(id))
   }
 
 }

@@ -1,38 +1,49 @@
 package pl.edu.agh.msc.utils.cqrs
 
-import akka.actor.{ ActorRef, ActorSystem, Props }
+import akka.actor.{ ActorSystem, Props }
+import akka.cluster.sharding.{ ClusterSharding, ClusterShardingSettings, ShardRegion }
 import akka.pattern.{ ask => akkaAsk }
 import akka.util.Timeout
 
-import scala.collection.JavaConverters._
-import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
 
-trait EntitiesFacade[Id] {
+abstract class EntitiesFacade(companion: EntityCompanion) {
+  import companion.commandClass
+
+  private val Shards = 50
 
   protected def actorSystem: ActorSystem
 
   private implicit lazy val ec: ExecutionContext = actorSystem.dispatcher
+  private val region = ClusterSharding(actorSystem).start(
+    typeName        = companion.name,
+    entityProps     = props,
+    settings        = ClusterShardingSettings(actorSystem),
+    extractEntityId = {
+      case message @ ShardRegion.StartEntity(id) => id -> message
+      case message: companion.Command =>
+        companion.idExtractor(message) -> message
+    },
+    extractShardId  = {
+      case ShardRegion.StartEntity(id) => toShardId(id)
+      case message: companion.Command =>
+        toShardId(companion.idExtractor(message))
+    }
+  )
 
-  private val entities = new java.util.concurrent.ConcurrentHashMap[Id, ActorRef].asScala
-
-  def call(id: Id, message: Any): Future[Unit] = {
-    ask[Entity.Ack.type](id, message).map(_ => ())
+  private def toShardId(id: String) = {
+    (math.abs(id.hashCode) % Shards).toString
   }
 
-  def ask[A: ClassTag](id: Id, message: Any): Future[A] = {
-    val actorRef = entities.getOrElseUpdate(id, create(id))
-    ask(message, actorRef).mapTo[A]
+  def call(message: Any): Future[Unit] = {
+    ask[Entity.Ack.type](message).map(_ => ())
   }
 
-  private def ask[A](message: Any, actorRef: ActorRef) = {
-    (actorRef ? message)(Timeout(2.seconds))
+  def ask[A: ClassTag](message: Any): Future[A] = {
+    (region ? message)(Timeout(5.seconds)).mapTo[A]
   }
 
-  private def create(id: Id) = {
-    actorSystem.actorOf(props(id))
-  }
-
-  protected def props(id: Id): Props
+  protected def props: Props
 }

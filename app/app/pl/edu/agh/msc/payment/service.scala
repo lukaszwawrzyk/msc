@@ -18,7 +18,7 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   def create(payment: PaymentRequest)(implicit ec: ExecutionContext): Future[PaymentId] = {
     val id = PaymentId(UUID.randomUUID())
-    entitiesFacade.call(id, PaymentEntity.CreatePayment(payment)).map(_ => id)
+    entitiesFacade.call(PaymentEntity.CreatePayment(id, payment)).map(_ => id)
   }
 
   def isPaid(id: PaymentId)(implicit ec: ExecutionContext): Future[Boolean] = {
@@ -32,7 +32,7 @@ import scala.concurrent.{ ExecutionContext, Future }
   }
 
   def pay(id: PaymentId)(implicit ec: ExecutionContext): Future[Unit] = {
-    entitiesFacade.call(id, PaymentEntity.CompletePayment())
+    entitiesFacade.call(PaymentEntity.CompletePayment(id))
   }
 
 }

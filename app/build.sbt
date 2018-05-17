@@ -36,6 +36,8 @@ libraryDependencies ++= Seq(
   akka("persistence-query"),
   akka("persistence-cassandra", version = "0.84"),
   akka("actor"),
+  akka("cluster-tools"),
+  akka("cluster-sharding"),
   akka("http-core", version = "10.1.1"),
   akka("slf4j"),
 

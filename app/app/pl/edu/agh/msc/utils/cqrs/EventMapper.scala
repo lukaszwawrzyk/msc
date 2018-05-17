@@ -14,7 +14,7 @@ abstract class EventMapper(
   offsetRepository:        OffsetRepository
 ) {
 
-  private val entityTag = companion.tag
+  private val entityTag = companion.name
   private val readJournal = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 
   import system.dispatcher
@@ -26,7 +26,7 @@ abstract class EventMapper(
         .eventsByTag(entityTag, initialOffset.getOrElse(Offset.noOffset))
         .mapAsync(1) { envelope =>
           process(envelope.event.asInstanceOf[companion.Event])
-            .recover { case e: Exception => println(s"Exception while applying event: $e in ${companion.tag} stream") }
+            .recover { case e: Exception => println(s"Exception while applying event: $e in ${companion.name} stream") }
             .map(_ => envelope.offset)
         }.mapAsync(1) {
           case offset: TimeBasedUUID =>

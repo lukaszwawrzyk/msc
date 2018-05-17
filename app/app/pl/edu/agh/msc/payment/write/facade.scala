@@ -9,10 +9,10 @@ import pl.edu.agh.msc.utils.cqrs.EntitiesFacade
 @Singleton class PaymentEntitiesFacade @Inject() (
   val actorSystem:     ActorSystem,
   notificationService: NotificationService
-) extends EntitiesFacade[PaymentId] {
+) extends EntitiesFacade(PaymentEntity) {
 
-  override protected def props(id: PaymentId): Props = {
-    Props(new PaymentEntity(id, notificationService))
+  override protected def props: Props = {
+    Props(new PaymentEntity(notificationService))
   }
 
 }

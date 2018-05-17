@@ -11,18 +11,20 @@ import scala.concurrent.Future
 import scala.reflect.ClassTag
 
 object OrderEntity extends EntityCompanion {
-  override val eventClass: ClassTag[Event] = implicitly[ClassTag[Event]]
-  override def tag: String = "orders"
+  override val eventClass = implicitly
+  override val commandClass = implicitly
+  override def name = "orders"
+  override def idExtractor: Command => String = _.id.value.toString
 
   sealed trait Event extends Serializable
   final case class OrderCreated(order: Order) extends Event
   final case class OrderConfirmed(id: OrderId) extends Event
   final case class OrderPaid(id: OrderId) extends Event
 
-  sealed trait Command
-  final case class CreateOrder(orderDraft: OrderDraft, user: UUID) extends Command
-  final case class ConfirmOrder() extends Command
-  final case class PayOrder() extends Command
+  sealed trait Command { def id: OrderId }
+  final case class CreateOrder(id: OrderId, orderDraft: OrderDraft, user: UUID) extends Command
+  final case class ConfirmOrder(id: OrderId) extends Command
+  final case class PayOrder(id: OrderId) extends Command
 
   private case class State(
     order: Option[Order]
@@ -47,22 +49,21 @@ object OrderEntity extends EntityCompanion {
 import OrderEntity._
 
 class OrderEntity(
-  val id:         OrderId,
   productService: ProductService,
   cartService:    CartService,
   time:           Time
-) extends Entity[OrderId, Command, Event] {
+) extends Entity[Command, Event] {
 
   import context.dispatcher
 
   private var state = State.notCreated
 
   override val handleCommand = {
-    case CreateOrder(draft, user) =>
-      handleDelayed(createInitialOrder(draft, user))(OrderCreated(_))(sideEffect = cartService.clear(user))(identity)
-    case ConfirmOrder() =>
+    case CreateOrder(id, draft, user) =>
+      handleDelayed(createInitialOrder(id, draft, user))(OrderCreated(_))(sideEffect = cartService.clear(user))(identity)
+    case ConfirmOrder(id) =>
       handlePure(OrderConfirmed(id))
-    case PayOrder() =>
+    case PayOrder(id) =>
       handlePure(OrderPaid(id))
   }
 
@@ -72,7 +73,7 @@ class OrderEntity(
     case OrderPaid(_)        => state = state.withStatus(OrderStatus.Paid)
   }
 
-  private def createInitialOrder(draft: OrderDraft, user: UUID): Future[Order] = {
+  private def createInitialOrder(id: OrderId, draft: OrderDraft, user: UUID): Future[Order] = {
     for {
       items <- Future.traverse(draft.cart.items) { cartItem =>
         productService.price(cartItem.product).map { price =>

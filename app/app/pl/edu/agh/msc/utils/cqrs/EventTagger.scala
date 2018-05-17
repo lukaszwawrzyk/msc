@@ -8,7 +8,7 @@ class EventTagger(companion: EntityCompanion) extends EventAdapter {
   override def manifest(event: Any): String = ""
   override def toJournal(event: Any): Any = event match {
     case e: companion.Event =>
-      Tagged(e, Set(companion.tag))
+      Tagged(e, Set(companion.name))
     case _ =>
       event
   }

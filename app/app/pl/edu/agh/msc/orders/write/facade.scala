@@ -13,10 +13,10 @@ import pl.edu.agh.msc.utils.cqrs.EntitiesFacade
   cartService:     CartService,
   time:            Time,
   val actorSystem: ActorSystem
-) extends EntitiesFacade[OrderId] {
+) extends EntitiesFacade(OrderEntity) {
 
-  override protected def props(id: OrderId): Props = {
-    Props(new OrderEntity(id, productService, cartService, time))
+  override protected def props: Props = {
+    Props(new OrderEntity(productService, cartService, time))
   }
 
 }

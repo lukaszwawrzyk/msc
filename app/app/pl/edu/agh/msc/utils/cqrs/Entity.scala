@@ -9,8 +9,11 @@ import scala.reflect.ClassTag
 
 trait EntityCompanion {
   type Event
+  type Command
   implicit val eventClass: ClassTag[Event]
-  def tag: String
+  implicit val commandClass: ClassTag[Command]
+  def name: String
+  def idExtractor: Command => String
 }
 
 object Entity {
@@ -18,13 +21,11 @@ object Entity {
   private case class DelayedResult(value: Any)
 }
 
-abstract class Entity[Id, Command: ClassTag, Event: ClassTag] extends PersistentActor {
+abstract class Entity[Command: ClassTag, Event: ClassTag] extends PersistentActor {
 
   import context.dispatcher
 
-  def id: Id
-
-  def persistenceId: String = id.toString
+  def persistenceId: String = self.path.parent.name + "-" + self.path.name
 
   override def receiveCommand: Receive = {
     case c: Command => handleCommand(c)

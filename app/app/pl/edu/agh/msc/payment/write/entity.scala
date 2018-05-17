@@ -7,16 +7,18 @@ import pl.edu.agh.msc.utils.cqrs.{ Entity, EntityCompanion }
 import scala.reflect.ClassTag
 
 object PaymentEntity extends EntityCompanion {
-  override val eventClass: ClassTag[Event] = implicitly[ClassTag[Event]]
-  override def tag: String = "payments"
+  override val eventClass = implicitly
+  override val commandClass = implicitly
+  override def name: String = "payments"
+  override def idExtractor: Command => String = _.id.value.toString
 
   sealed trait Event extends Serializable
   final case class PaymentCreated(id: PaymentId, paymentRequest: PaymentRequest) extends Event
   final case class PaymentCompleted(id: PaymentId) extends Event
 
-  sealed trait Command
-  final case class CreatePayment(paymentRequest: PaymentRequest) extends Command
-  final case class CompletePayment() extends Command
+  sealed trait Command { def id: PaymentId }
+  final case class CreatePayment(id: PaymentId, paymentRequest: PaymentRequest) extends Command
+  final case class CompletePayment(id: PaymentId) extends Command
 
   private case class State(
     request: Option[PaymentRequest],
@@ -42,16 +44,15 @@ object PaymentEntity extends EntityCompanion {
 import PaymentEntity._
 
 class PaymentEntity(
-  val id:              PaymentId,
   notificationService: NotificationService
-) extends Entity[PaymentId, Command, Event] {
+) extends Entity[Command, Event] {
 
   private var state = State.initial
 
   override val handleCommand = {
-    case CreatePayment(paymentRequest) =>
+    case CreatePayment(id, paymentRequest) =>
       handlePure(PaymentCreated(id, paymentRequest))
-    case CompletePayment() =>
+    case CompletePayment(id) =>
       handleEffect(PaymentCompleted(id)) {
         notificationService.notifyURL(state.returnUrl)
       }
