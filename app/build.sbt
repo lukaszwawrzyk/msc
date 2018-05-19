@@ -21,13 +21,14 @@ scalacOptions ++= Seq(
 
 resolvers ++= Seq(
   Resolver.jcenterRepo,
-  Resolver.sonatypeRepo("snapshots")
+  Resolver.sonatypeRepo("snapshots"),
+  "Spy Repository" at "http://files.couchbase.com/maven2"
 )
 
 def akka(module: String, version: String = "2.5.12") = "com.typesafe.akka" %% s"akka-$module" % version
 
 libraryDependencies ++= Seq(
-  ehcache,
+  cacheApi,
   guice,
   filters,
   ws,
@@ -46,6 +47,8 @@ libraryDependencies ++= Seq(
   "com.mohiva"             %% "play-silhouette-password-bcrypt" % "5.0.0",
   "com.mohiva"             %% "play-silhouette-persistence"     % "5.0.0",
   "com.mohiva"             %% "play-silhouette-crypto-jca"      % "5.0.0",
+
+  "com.github.mumoshu"     %% "play2-memcached-play26"          % "0.9.1",
 
   "net.codingwell"         %% "scala-guice"                     % "4.1.0",
   "com.iheart"             %% "ficus"                           % "1.4.1",

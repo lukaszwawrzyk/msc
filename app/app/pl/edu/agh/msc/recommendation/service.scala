@@ -7,13 +7,16 @@ import com.google.inject.{ Inject, Singleton }
 import pl.edu.agh.msc.orders.OrdersService
 import pl.edu.agh.msc.products._
 import pl.edu.agh.msc.review.Rating
+import pl.edu.agh.msc.utils.Cache
 
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.Random
 
 @Singleton class RecommendationService @Inject() (
   productService: ProductService,
-  ordersService:  OrdersService
+  ordersService:  OrdersService,
+  cache:          Cache
 ) {
 
   private val MaxWords = 4
@@ -24,10 +27,14 @@ import scala.util.Random
   private implicit val ratingOrdering: Ordering[Rating] = Ordering.by(_.value)
 
   def default()(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
-    findDefaultProducts.map(_.data)
+    cache.cached(namespace  = "recomm-default", expiration = 5.minutes)("")(_ => findDefaultProducts.map(_.data))
   }
 
   def forProduct(productId: ProductId, max: Int)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
+    cache.cached(namespace  = "recomm-prod", expiration = 1.day)((productId, max))((forProductNonCached _).tupled)
+  }
+
+  private def forProductNonCached(productId: ProductId, max: Int)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
     for {
       product <- productService.findShort(productId)
       words = wordsInName(product).take(MaxWords)
