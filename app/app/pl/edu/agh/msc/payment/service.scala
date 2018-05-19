@@ -14,8 +14,6 @@ import scala.concurrent.{ ExecutionContext, Future }
   eventMapper:       PaymentEventMapper
 ) {
 
-  eventMapper.run()
-
   def create(payment: PaymentRequest)(implicit ec: ExecutionContext): Future[PaymentId] = {
     val id = PaymentId(UUID.randomUUID())
     entitiesFacade.call(PaymentEntity.CreatePayment(id, payment)).map(_ => id)
