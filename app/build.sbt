@@ -40,6 +40,7 @@ libraryDependencies ++= Seq(
   akka("cluster-sharding"),
   akka("http-core", version = "10.1.1"),
   akka("slf4j"),
+  "com.lightbend.akka.discovery" %% "akka-discovery-aws-api" % "0.13.1",
 
   "com.mohiva"             %% "play-silhouette"                 % "5.0.0",
   "com.mohiva"             %% "play-silhouette-password-bcrypt" % "5.0.0",

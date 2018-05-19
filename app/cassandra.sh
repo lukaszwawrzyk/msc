@@ -1,0 +1,1 @@
+docker run --name cassandra -p 9042:9042 -p 9160:9160 -d cassandra
