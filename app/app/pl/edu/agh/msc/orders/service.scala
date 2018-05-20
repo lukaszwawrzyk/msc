@@ -14,8 +14,6 @@ import scala.concurrent.{ ExecutionContext, Future }
   eventMapper:      OrdersEventMapper
 ) {
 
-  eventMapper.run()
-
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = {
     ordersRepository.find(id)
   }
