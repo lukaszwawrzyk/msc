@@ -71,11 +71,6 @@ libraryDependencies ++= Seq(
 enablePlugins(PlayScala)
 enablePlugins(SbtWeb)
 enablePlugins(LauncherJarPlugin)
-enablePlugins(ElasticBeanstalkPlugin)
-
-maintainer in Docker := "Łukasz Wawrzyk <lukasz.wawrzyk@gmail.com>"
-dockerExposedPorts := Seq(9000)
-dockerBaseImage := "java:8"
 
 routesGenerator := InjectedRoutesGenerator
 routesImport ++= Seq(
