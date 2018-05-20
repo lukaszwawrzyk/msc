@@ -85,8 +85,8 @@ class HighLoad extends BaseSimulation {
 
 class AutoScaling extends BaseSimulation {
 
-  val pauseTime = 500.millis
-  val maxUsers = 3500
+  val pauseTime = 2000.millis
+  val maxUsers = 14000
   override val simulationTime = 7.minutes
 
 
