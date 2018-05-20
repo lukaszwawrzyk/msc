@@ -82,6 +82,26 @@ class HighLoad extends BaseSimulation {
 
 }
 
+
+class AutoScaling extends BaseSimulation {
+
+  val pauseTime = 500.millis
+  val maxUsers = 3000
+  override val simulationTime = 8.minutes
+
+
+  setUp(
+    scenario.browsing.repeating.inject(
+      rampUsers(maxUsers) over simulationTime
+    ).customPauses(pauseTime.toMillis),
+    scenario.buying.repeating.inject(
+      rampUsers(maxUsers / 10) over simulationTime
+    ).customPauses(pauseTime.toMillis)
+  )
+
+}
+
+
 /*
 class CircuitBreakerTest extends BaseSimulation {
 

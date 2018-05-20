@@ -74,13 +74,15 @@ class BuyingScenario(random: Random) {
   }.exitHereIfFailed.pause(5, 2.minutes).exec {
     post("confirm order", "${orderConfirmUri}")
       .check(css("#payment-form", "action").saveAs("paymentConfirmUri"))
-  }.exitHereIfFailed.pause(1.minute, 5.minutes).exec {
-    post("pay", "${paymentConfirmUri}")
-      .formParam("cc-name", "${firstName} {lastName}")
-      .formParam("cc-number", "${cardNumber}")
-      .formParam("cc-exp", "${cardExpiry}")
-      .formParam("x_card_code", "${cardCode}")
-  }.exitHereIfFailed.pause(1.minute)
+  }.pause(1.minute, 5.minutes).doIf("${paymentConfirmUri.exists()}") {
+    exec {
+      post("pay", "${paymentConfirmUri}")
+        .formParam("cc-name", "${firstName} {lastName}")
+        .formParam("cc-number", "${cardNumber}")
+        .formParam("cc-exp", "${cardExpiry}")
+        .formParam("x_card_code", "${cardCode}")
+    }
+  }.pause(1.minute)
 
   // normally this would be a separate scenario, but it is easier to do it together
   // as we have access to user accounts that are generated automatically.
@@ -89,17 +91,21 @@ class BuyingScenario(random: Random) {
     exec(
       get("show historical orders", "/orders")
         .check(css("#historical-orders > tbody > tr:nth-child(1) > td:nth-child(1) > a", "href").saveAs("lastOrderDetailsUri"))
-    ).exitHereIfFailed.pause(5, 30).exec(
-      get("show last order details", "${lastOrderDetailsUri}")
-        .check(css("#line-items-table > tbody > tr:first-child > td:nth-child(2) > a", "href").saveAs("boughtProductUrl"))
-    ).exitHereIfFailed.pause(5, 30).exec(
-      get("show last bought product", "${boughtProductUrl}")
-    ).exitHereIfFailed.pause(30, 5.minutes).exec(
-      post("post the comment", "${boughtProductUrl}/review")
-        .formParam("author", "${firstName} ${lastName}")
-        .formParam("rating", "${rating}")
-        .formParam("content", "${comment}")
-    )
+    ).pause(5, 30).doIf("${lastOrderDetailsUri.exists()}") {
+      exec(
+        get("show last order details", "${lastOrderDetailsUri}")
+          .check(css("#line-items-table > tbody > tr:first-child > td:nth-child(2) > a", "href").saveAs("boughtProductUrl"))
+      ).pause(5, 30).doIf("${boughtProductUrl.exists}"){
+        exec(
+          get("show last bought product", "${boughtProductUrl}")
+        ).pause(30, 5.minutes).exec(
+          post("post the comment", "${boughtProductUrl}/review")
+            .formParam("author", "${firstName} ${lastName}")
+            .formParam("rating", "${rating}")
+            .formParam("content", "${comment}")
+        )
+      }
+    }
   }
 
   def repeating = scenario("Buying Scenario")
