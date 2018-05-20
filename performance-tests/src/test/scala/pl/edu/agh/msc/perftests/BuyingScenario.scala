@@ -95,7 +95,7 @@ class BuyingScenario(random: Random) {
       exec(
         get("show last order details", "${lastOrderDetailsUri}")
           .check(css("#line-items-table > tbody > tr:first-child > td:nth-child(2) > a", "href").saveAs("boughtProductUrl"))
-      ).pause(5, 30).doIf("${boughtProductUrl.exists}"){
+      ).pause(5, 30).doIf("${boughtProductUrl.exists()}"){
         exec(
           get("show last bought product", "${boughtProductUrl}")
         ).pause(30, 5.minutes).exec(

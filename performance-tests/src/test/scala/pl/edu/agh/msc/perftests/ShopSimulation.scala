@@ -7,7 +7,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 
 class BaseSimulation extends Simulation {
-  private val baseUrl = "http://mscth.eu-west-2.elasticbeanstalk.com"
+  private val baseUrl = "http://msc-972310170.eu-west-2.elb.amazonaws.com"
 
   val random = new Random(lastProductId = 501)
 
@@ -86,8 +86,8 @@ class HighLoad extends BaseSimulation {
 class AutoScaling extends BaseSimulation {
 
   val pauseTime = 500.millis
-  val maxUsers = 3000
-  override val simulationTime = 8.minutes
+  val maxUsers = 3500
+  override val simulationTime = 7.minutes
 
 
   setUp(
