@@ -4,7 +4,8 @@ import akka.actor.ActorSystem
 import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
 import akka.persistence.query.{ Offset, PersistenceQuery, TimeBasedUUID }
 import akka.stream.scaladsl.Sink
-import akka.stream.{ ActorMaterializer, Materializer }
+import akka.stream.{ ActorMaterializer, Materializer, ThrottleMode }
+import scala.concurrent.duration._
 
 import scala.concurrent.Future
 
@@ -24,6 +25,7 @@ abstract class EventMapper(
       implicit val mat: Materializer = ActorMaterializer()(system)
       readJournal
         .eventsByTag(entityTag, initialOffset.getOrElse(Offset.noOffset))
+        .throttle(200, 1.second, 1, ThrottleMode.shaping)
         .mapAsync(1) { envelope =>
           process(envelope.event.asInstanceOf[companion.Event])
             .recover { case e: Exception => println(s"Exception while applying event: $e in ${companion.name} stream") }
