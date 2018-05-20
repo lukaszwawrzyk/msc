@@ -21,7 +21,6 @@ class LandingPageController @Inject() (
   private val MaxReviews = 10
 
   def view = UserAware { implicit request =>
-
     for {
       recommendations <- request.identity
         .fold(recommendationService.default())(user => recommendationService.forUser(user.id))
