@@ -81,7 +81,7 @@ class OrderController @Inject() (
         order.items.map(item => Product(products(item.product).name, item.price, item.amount)),
         new URL(routes.OrderController.paid(id).absoluteURL())
       ))
-      _ <- Future.delay(500.millis)
+      _ <- Future.delay(2000.millis)
     } yield Redirect(routes.PaymentController.view(paymentId))
   }
 
