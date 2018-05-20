@@ -4,7 +4,6 @@ import java.util.UUID
 
 import cats.syntax.option._
 import com.google.inject.{ Inject, Singleton }
-import pl.edu.agh.msc.orders.OrdersService
 import pl.edu.agh.msc.products._
 import pl.edu.agh.msc.review.Rating
 import pl.edu.agh.msc.utils.Cache
@@ -15,13 +14,11 @@ import scala.util.Random
 
 @Singleton class RecommendationService @Inject() (
   productService: ProductService,
-  ordersService:  OrdersService,
   cache:          Cache
 ) {
 
   private val MaxWords = 4
   private val MaxRecommendations = 5
-  private val MaxRecentProducts = 5
   private val MinRating = Rating(4)
 
   private implicit val ratingOrdering: Ordering[Rating] = Ordering.by(_.value)
@@ -43,20 +40,7 @@ import scala.util.Random
   }
 
   def forUser(userId: UUID)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
-    for {
-      recentProducts <- recentlyOrdered(userId)
-      allWords = recentProducts.flatMap(wordsInName)
-      randomWords = Random.shuffle(allWords).take(MaxWords)
-      recommendations <- forWords(randomWords, excluding = recentProducts.map(_.id).toSet)
-    } yield recommendations
-  }
-
-  private def recentlyOrdered(userId: UUID)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {
-    for {
-      orders <- ordersService.historical(userId)
-      recentProductIds = orders.flatMap(_.items).map(_.product).take(MaxRecentProducts)
-      recentProducts <- Future.traverse(recentProductIds)(productService.findShort)
-    } yield recentProducts
+    default()
   }
 
   private def forWords(words: Seq[String], excluding: Set[ProductId], max: Int = MaxRecommendations)(implicit ec: ExecutionContext): Future[Seq[ProductShort]] = {

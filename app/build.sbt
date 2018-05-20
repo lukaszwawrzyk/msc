@@ -57,7 +57,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play"      %% "play-slick"                      % "3.0.3",
   "com.typesafe.play"      %% "play-slick-evolutions"           % "3.0.3",
   "com.h2database"         %  "h2"                              % "1.4.196",
-  "org.postgresql"         %  "postgresql"                       % "42.2.2",
+  "org.postgresql"         %  "postgresql"                      % "42.2.2",
   "org.typelevel"          %% "cats-core"                       % "1.0.1",
 
   "com.github.javafaker"   %  "javafaker"                       % "0.14",

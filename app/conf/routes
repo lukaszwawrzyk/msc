@@ -21,16 +21,5 @@ POST        /products/$id<[0-9]+>/review     pl.edu.agh.msc.ui.controllers.Produ
 GET         /cart                            pl.edu.agh.msc.ui.controllers.CartController.view
 POST        /cart/add/:productId             pl.edu.agh.msc.ui.controllers.CartController.add(productId: ProductId)
 
-#orders
-POST        /orders/draft                    pl.edu.agh.msc.ui.controllers.OrderController.draft
-GET         /orders/:id                      pl.edu.agh.msc.ui.controllers.OrderController.view(id: OrderId)
-POST        /orders/:id/confirm              pl.edu.agh.msc.ui.controllers.OrderController.confirm(id: OrderId)
-POST        /orders/:id/paid                 pl.edu.agh.msc.ui.controllers.OrderController.paid(id: OrderId)
-GET         /orders                          pl.edu.agh.msc.ui.controllers.OrderController.list()
-
-#payments
-GET         /payment/:id                     pl.edu.agh.msc.ui.controllers.PaymentController.view(id: PaymentId)
-POST        /payment/:id/pay                 pl.edu.agh.msc.ui.controllers.PaymentController.pay(id: PaymentId)
-
 # common
 GET         /assets/*file                    controllers.Assets.versioned(file)

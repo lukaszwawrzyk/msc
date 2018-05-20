@@ -32,18 +32,6 @@
         <div class="row justify-content-center">
             <div class="col-6">
                 <h3>Address</h3>
-                <form action="@routes.OrderController.draft()" method="post">
-                    <input type="text" class="form-control" id="fullName"      name="address.fullName"      placeholder="Full Name">
-                    <input type="text" class="form-control" id="streetAddress" name="address.streetAddress" placeholder="Street Address">
-                    <input type="text" class="form-control" id="zipCode"       name="address.zipCode"       placeholder="Zip Code">
-                    <input type="text" class="form-control" id="city"          name="address.city"          placeholder="City">
-                    <input type="text" class="form-control" id="country"       name="address.country"       placeholder="Country">
-                    @for((items, index) <- cart.items.zipWithIndex) {
-                        <input type="hidden" id="cart.items[@index].product" name="cart.items[@index].product" value="@items.product.value">
-                        <input type="hidden" id="cart.items[@index].amount"  name="cart.items[@index].amount"  value="@items.amount">
-                    }
-                    <input type="submit" class="btn btn-lg btn-primary btn-block" value="Checkout">
-                </form>
             </div>
         </div>
     } else {

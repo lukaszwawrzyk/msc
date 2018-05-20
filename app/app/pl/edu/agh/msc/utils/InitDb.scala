@@ -3,11 +3,13 @@ package pl.edu.agh.msc.utils
 import java.time.{ LocalDateTime, ZoneId }
 import java.util.concurrent.TimeUnit
 import java.util.{ Date, Locale, Random }
-import javax.inject.Inject
 
+import javax.inject.Inject
 import com.github.javafaker.Faker
 import controllers.AssetsFinder
 import pl.edu.agh.msc.availability.{ Availability, AvailabilityRepository }
+import pl.edu.agh.msc.orders.read.OrdersEventMapper
+import pl.edu.agh.msc.payment.read.PaymentEventMapper
 import pl.edu.agh.msc.pricing.{ Money, PriceRepository }
 import pl.edu.agh.msc.products._
 import pl.edu.agh.msc.review.{ Rating, Review, ReviewRepository }
@@ -22,7 +24,9 @@ class InitDb @Inject() (
   pricesRepository:       PriceRepository,
   reviewRepository:       ReviewRepository,
   availabilityRepository: AvailabilityRepository,
-  assetsFinder:           AssetsFinder
+  assetsFinder:           AssetsFinder,
+  ordersEventMapper:      OrdersEventMapper,
+  paymentsEventMapper:    PaymentEventMapper
 )(implicit ec: ExecutionContext) {
 
   Locale.setDefault(Locale.ENGLISH)
@@ -40,6 +44,11 @@ class InitDb @Inject() (
 
   productService.listNonCached(Filtering(), Pagination(1, 1)).flatMap { res =>
     if (res.data.isEmpty) run(500).map(_ => println("Initialized")) else Future.successful(println("Already initialized"))
+  }.map { _ =>
+    println("starting mappers")
+    ordersEventMapper.run()
+    paymentsEventMapper.run()
+    println("started mappers")
   }
 
   private def createAndSaveProduct(): Future[ProductId] = {

@@ -31,7 +31,6 @@
                 <div class="navbar-nav mr-auto">
                     <a class="nav-link" href="@uiroutes.ProductController.list().url">Products</a>
                     @if(user.isDefined){
-                        <a class="nav-link" href="@uiroutes.OrderController.list()">Orders</a>
                         <a class="nav-link" href="@uiroutes.CartController.view()">Cart</a>
                     }
                 </div>
