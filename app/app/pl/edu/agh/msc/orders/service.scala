@@ -10,11 +10,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 
 @Singleton class OrdersService @Inject() (
   ordersRepository: OrdersRepository,
-  entitiesFacade:   OrderEntitiesFacade,
-  eventMapper:      OrdersEventMapper
+  entitiesFacade:   OrderEntitiesFacade
 ) {
-
-  eventMapper.run()
 
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = {
     entitiesFacade.query[Option[Order]](OrderEntity.GetOrder(id)).map(_.get)

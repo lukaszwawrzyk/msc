@@ -10,11 +10,8 @@ import scala.concurrent.{ ExecutionContext, Future }
 import scala.util.control.NonFatal
 
 @Singleton class PaymentService @Inject() (
-  entitiesFacade: PaymentEntitiesFacade,
-  eventMapper:    PaymentEventMapper
+  entitiesFacade: PaymentEntitiesFacade
 ) {
-
-  eventMapper.run()
 
   def create(payment: PaymentRequest)(implicit ec: ExecutionContext): Future[PaymentId] = {
     val id = PaymentId(UUID.randomUUID())
