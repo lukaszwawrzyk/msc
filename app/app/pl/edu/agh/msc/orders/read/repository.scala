@@ -75,9 +75,16 @@ import scala.concurrent.{ ExecutionContext, Future }
   private val lineItemsByOrderQuery = Compiled { orderId: Rep[UUID] =>
     baseLineItemsQuery.filter(_.orderId === orderId)
   }
+  private val orderExistsByIdQuery = Compiled { id: Rep[UUID] =>
+    baseOrderQuery.filter(_.id === id).exists
+  }
 
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = db.run {
     orderByIdQuery(id.value).result.head.flatMap(convertRow)
+  }
+
+  def exists(id: OrderId)(implicit ec: ExecutionContext): Future[Boolean] = db.run {
+    orderExistsByIdQuery(id.value).result
   }
 
   def findByUser(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = db.run {

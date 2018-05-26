@@ -1,5 +1,6 @@
 package pl.edu.agh.msc.utils.cqrs
 
+import akka.actor.ActorRef
 import akka.pattern._
 import akka.persistence.PersistentActor
 import akka.persistence.journal.Tagged
@@ -39,23 +40,15 @@ abstract class Entity[Command: ClassTag, Event: ClassTag] extends PersistentActo
 
   protected def handleEffect(event: Event)(sideEffect: => Unit): Unit = {
     val persistentSender = sender()
-    emit(event) { e =>
-      applyEvent(e)
-      sideEffect
-      persistentSender ! Entity.Ack
-    }
+    handleEffect(persistentSender)(event)(sideEffect)
   }
 
-  protected def handleDelayed[A: ClassTag](initialLogic: Future[A])(event: A => Event)(sideEffect: => Unit)(response: A => Any): Unit = {
+  protected def handleDelayed(createEvent: Future[Event])(sideEffect: => Unit): Unit = {
     val persistentSender = sender()
-    initialLogic.map(Entity.DelayedResult) pipeTo self
+    createEvent.map(Entity.DelayedResult) pipeTo self
     context.become({
-      case Entity.DelayedResult(res: A) =>
-        emit(event(res)) { e =>
-          applyEvent(e)
-          sideEffect
-          persistentSender ! response(res)
-        }
+      case Entity.DelayedResult(event: Event) =>
+        handleEffect(persistentSender)(event)(sideEffect)
         unstashAll()
         context.unbecome()
       case _ => stash()
@@ -70,6 +63,14 @@ abstract class Entity[Command: ClassTag, Event: ClassTag] extends PersistentActo
   }
 
   protected def applyEvent: Event => Unit
+
+  private def handleEffect(persistentSender: ActorRef)(event: Event)(sideEffect: => Unit): Unit = {
+    emit(event) { e =>
+      applyEvent(e)
+      sideEffect
+      persistentSender ! Entity.Ack
+    }
+  }
 
   @inline private def emit[A](event: A)(handler: A => Unit): Unit = {
     persist(event)(handler)

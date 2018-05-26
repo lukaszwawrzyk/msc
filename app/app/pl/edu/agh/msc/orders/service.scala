@@ -14,17 +14,23 @@ import scala.concurrent.{ ExecutionContext, Future }
   eventMapper:      OrdersEventMapper
 ) {
 
+  eventMapper.run()
+
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = {
     ordersRepository.find(id)
+  }
+
+  def exists(id: OrderId)(implicit ec: ExecutionContext): Future[Boolean] = {
+    ordersRepository.exists(id)
   }
 
   def historical(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = {
     ordersRepository.findByUser(user)
   }
 
-  def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[Order] = {
+  def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[OrderId] = {
     val id = OrderId(UUID.randomUUID())
-    entitiesFacade.ask[Order](OrderEntity.CreateOrder(id, orderDraft, user))
+    entitiesFacade.call(OrderEntity.CreateOrder(id, orderDraft, user)).map(_ => id)
   }
 
   def confirm(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {

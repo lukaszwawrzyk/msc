@@ -60,7 +60,7 @@ class OrderEntity(
 
   override val handleCommand = {
     case CreateOrder(id, draft, user) =>
-      handleDelayed(createInitialOrder(id, draft, user))(OrderCreated(_))(sideEffect = cartService.clear(user))(identity)
+      handleDelayed(createInitialOrder(id, draft, user))(sideEffect = cartService.clear(user))
     case ConfirmOrder(id) =>
       handlePure(OrderConfirmed(id))
     case PayOrder(id) =>
@@ -73,7 +73,7 @@ class OrderEntity(
     case OrderPaid(_)        => state = state.withStatus(OrderStatus.Paid)
   }
 
-  private def createInitialOrder(id: OrderId, draft: OrderDraft, user: UUID): Future[Order] = {
+  private def createInitialOrder(id: OrderId, draft: OrderDraft, user: UUID): Future[OrderCreated] = {
     for {
       items <- Future.traverse(draft.cart.items) { cartItem =>
         productService.price(cartItem.product).map { price =>
@@ -88,9 +88,7 @@ class OrderEntity(
         items,
         date = time.now()
       )
-    } yield {
-      order
-    }
+    } yield OrderCreated(order)
   }
 
 }

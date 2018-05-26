@@ -55,12 +55,20 @@ class OrderController @Inject() (
   def draft = Secured { implicit request =>
     orderForm.bindFromRequest.fold(
       e => Future.successful(BadRequest(e.errors.toString)),
-      orderDraft => ordersService.saveDraft(orderDraft, request.identity.id).flatMap(orderDetailsView)
+      orderDraft => for {
+        id <- ordersService.saveDraft(orderDraft, request.identity.id)
+        _ <- waitUntil(ordersService.exists(id))(300.millis, 500.millis, 500.millis, 1.second, 2.seconds, 5.seconds)
+      } yield Redirect(routes.OrderController.view(id))
     )
   }
 
   def view(id: OrderId) = Secured { implicit request =>
-    ordersService.find(id).flatMap(orderDetailsView)
+    for {
+      order <- ordersService.find(id)
+      products <- buildMap(order.items.map(_.product))(productService.findShort)
+    } yield {
+      Ok(views.html.orderDetails(order, products))
+    }
   }
 
   def list() = Secured { implicit request =>
@@ -81,20 +89,12 @@ class OrderController @Inject() (
         order.items.map(item => Product(products(item.product).name, item.price, item.amount)),
         new URL(routes.OrderController.paid(id).absoluteURL())
       ))
-      _ <- Future.delay(2000.millis)
+      _ <- waitUntil(paymentService.exists(paymentId))(300.millis, 500.millis, 500.millis, 1.second, 2.seconds, 5.seconds)
     } yield Redirect(routes.PaymentController.view(paymentId))
   }
 
   def paid(id: OrderId) = UserAware { implicit request =>
     ordersService.paymentConfirmed(id).map(_ => Ok)
-  }
-
-  private def orderDetailsView(order: Order)(implicit r: UserReq): Res = {
-    for {
-      products <- buildMap(order.items.map(_.product))(productService.findShort)
-    } yield {
-      Ok(views.html.orderDetails(order, products))
-    }
   }
 
 }
