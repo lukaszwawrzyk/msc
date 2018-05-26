@@ -11,10 +11,13 @@ import scala.reflect.ClassTag
 trait EntityCompanion {
   type Event
   type Command
+  type Query
   implicit val eventClass: ClassTag[Event]
   implicit val commandClass: ClassTag[Command]
+  implicit val queryClass: ClassTag[Query]
   def name: String
-  def idExtractor: Command => String
+  def commandIdExtractor: Command => String
+  def queryIdExtractor: Query => String
 }
 
 object Entity {
@@ -22,7 +25,7 @@ object Entity {
   private case class DelayedResult(value: Any)
 }
 
-abstract class Entity[Command: ClassTag, Event: ClassTag] extends PersistentActor {
+abstract class Entity[Command: ClassTag, Event: ClassTag, Query: ClassTag] extends PersistentActor {
 
   import context.dispatcher
 
@@ -30,9 +33,11 @@ abstract class Entity[Command: ClassTag, Event: ClassTag] extends PersistentActo
 
   override def receiveCommand: Receive = {
     case c: Command => handleCommand(c)
+    case q: Query   => sender() ! handleQuery(q)
   }
 
   def handleCommand: Command => Unit
+  def handleQuery: Query => Any
 
   protected def handlePure(event: Event): Unit = {
     handleEffect(event)(())

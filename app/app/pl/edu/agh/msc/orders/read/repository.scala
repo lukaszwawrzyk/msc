@@ -83,10 +83,6 @@ import scala.concurrent.{ ExecutionContext, Future }
     orderByIdQuery(id.value).result.head.flatMap(convertRow)
   }
 
-  def exists(id: OrderId)(implicit ec: ExecutionContext): Future[Boolean] = db.run {
-    orderExistsByIdQuery(id.value).result
-  }
-
   def findByUser(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = db.run {
     for {
       orderRows <- orderByUserQuery(user).result

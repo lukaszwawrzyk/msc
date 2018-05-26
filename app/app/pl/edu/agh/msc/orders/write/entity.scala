@@ -13,8 +13,10 @@ import scala.reflect.ClassTag
 object OrderEntity extends EntityCompanion {
   override val eventClass = implicitly
   override val commandClass = implicitly
+  override val queryClass = implicitly
   override def name = "orders"
-  override def idExtractor: Command => String = _.id.value.toString
+  override def commandIdExtractor: Command => String = _.id.value.toString
+  override def queryIdExtractor: Query => String = _.id.value.toString
 
   sealed trait Event extends Serializable
   final case class OrderCreated(order: Order) extends Event
@@ -25,6 +27,9 @@ object OrderEntity extends EntityCompanion {
   final case class CreateOrder(id: OrderId, orderDraft: OrderDraft, user: UUID) extends Command
   final case class ConfirmOrder(id: OrderId) extends Command
   final case class PayOrder(id: OrderId) extends Command
+
+  sealed trait Query { def id: OrderId }
+  final case class GetOrder(id: OrderId) extends Query
 
   private case class State(
     order: Option[Order]
@@ -52,7 +57,7 @@ class OrderEntity(
   productService: ProductService,
   cartService:    CartService,
   time:           Time
-) extends Entity[Command, Event] {
+) extends Entity[Command, Event, Query] {
 
   import context.dispatcher
 
@@ -65,6 +70,10 @@ class OrderEntity(
       handlePure(OrderConfirmed(id))
     case PayOrder(id) =>
       handlePure(OrderPaid(id))
+  }
+
+  override val handleQuery = {
+    case GetOrder(_) => state.order
   }
 
   override val applyEvent = {

@@ -9,8 +9,10 @@ import scala.reflect.ClassTag
 object PaymentEntity extends EntityCompanion {
   override val eventClass = implicitly
   override val commandClass = implicitly
+  override val queryClass = implicitly
   override def name: String = "payments"
-  override def idExtractor: Command => String = _.id.value.toString
+  override def commandIdExtractor: Command => String = _.id.value.toString
+  override def queryIdExtractor: Query => String = _.id.value.toString
 
   sealed trait Event extends Serializable
   final case class PaymentCreated(id: PaymentId, paymentRequest: PaymentRequest) extends Event
@@ -19,6 +21,9 @@ object PaymentEntity extends EntityCompanion {
   sealed trait Command { def id: PaymentId }
   final case class CreatePayment(id: PaymentId, paymentRequest: PaymentRequest) extends Command
   final case class CompletePayment(id: PaymentId) extends Command
+
+  sealed trait Query { def id: PaymentId }
+  sealed case class GetPayment(id: PaymentId) extends Query
 
   private case class State(
     request: Option[PaymentRequest],
@@ -45,7 +50,7 @@ import PaymentEntity._
 
 class PaymentEntity(
   notificationService: NotificationService
-) extends Entity[Command, Event] {
+) extends Entity[Command, Event, Query] {
 
   private var state = State.initial
 
@@ -56,6 +61,10 @@ class PaymentEntity(
       handleEffect(PaymentCompleted(id)) {
         notificationService.notifyURL(state.returnUrl)
       }
+  }
+
+  override val handleQuery = {
+    case GetPayment(_) => state.request
   }
 
   override protected val applyEvent = {

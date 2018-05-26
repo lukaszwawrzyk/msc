@@ -17,11 +17,7 @@ import scala.concurrent.{ ExecutionContext, Future }
   eventMapper.run()
 
   def find(id: OrderId)(implicit ec: ExecutionContext): Future[Order] = {
-    ordersRepository.find(id)
-  }
-
-  def exists(id: OrderId)(implicit ec: ExecutionContext): Future[Boolean] = {
-    ordersRepository.exists(id)
+    entitiesFacade.query[Option[Order]](OrderEntity.GetOrder(id)).map(_.get)
   }
 
   def historical(user: UUID)(implicit ec: ExecutionContext): Future[Seq[Order]] = {
@@ -30,15 +26,15 @@ import scala.concurrent.{ ExecutionContext, Future }
 
   def saveDraft(orderDraft: OrderDraft, user: UUID)(implicit ec: ExecutionContext): Future[OrderId] = {
     val id = OrderId(UUID.randomUUID())
-    entitiesFacade.call(OrderEntity.CreateOrder(id, orderDraft, user)).map(_ => id)
+    entitiesFacade.command(OrderEntity.CreateOrder(id, orderDraft, user)).map(_ => id)
   }
 
   def confirm(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    entitiesFacade.call(OrderEntity.ConfirmOrder(id))
+    entitiesFacade.command(OrderEntity.ConfirmOrder(id))
   }
 
   def paymentConfirmed(id: OrderId)(implicit ec: ExecutionContext): Future[Unit] = {
-    entitiesFacade.call(OrderEntity.PayOrder(id))
+    entitiesFacade.command(OrderEntity.PayOrder(id))
   }
 
 }
