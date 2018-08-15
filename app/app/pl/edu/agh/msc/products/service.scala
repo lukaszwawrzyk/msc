@@ -8,9 +8,10 @@ import pl.edu.agh.msc.pricing.{ Money, PricingService }
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.review.{ Rating, ReviewService }
 import pl.edu.agh.msc.utils.{ Cache, KeyFormat }
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
+import scala.reflect.ClassTag
 
 case class Sorting(byNameAsc: Boolean)
 object Sorting {
@@ -45,26 +46,13 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
   def findDetailed(
     id: ProductId
   )(implicit ec: ExecutionContext): Future[ProductDetails] = {
-    cache.cached(namespace  = "prod-detailed", expiration = 10.minutes)(id)(findDetailedNonCached)
-  }
-
-  def findShort(
-    id: ProductId
-  )(implicit ec: ExecutionContext): Future[ProductShort] = {
-    cache.cached(namespace  = "prod-short", expiration = 10.minutes)(id)(findShortNonCached)
-  }
-
-  private def findDetailedNonCached(
-    id: ProductId
-  )(implicit ec: ExecutionContext): Future[ProductDetails] = {
+    def cached[A: ClassTag](namespace: String, get: ProductId => Future[A]): Future[A] = cache.cached(namespace, expiration = 10.minutes)(id)(get)
     for {
-      product <- productRepository.find(id)
-      rating <- reviewService.averageRating(id)
-      reviews <- reviewService.find(id)
-      price <- pricingService.find(id)
-      availability <- availabilityService.find(id)
-      // do it as batch
-      //      _ <- updateCachedData(id, product, rating, price)
+      product <- cached("prod-repo", productRepository.find)
+      rating <- cached("avg-rate", reviewService.averageRating)
+      reviews <- cached("reviews", reviewService.find)
+      price <- cached("price", pricingService.find)
+      availability <- cached("availability", availabilityService.find)
     } yield {
       val photo = product.photo.map { p =>
         p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
@@ -80,6 +68,12 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
         id
       )
     }
+  }
+
+  def findShort(
+    id: ProductId
+  )(implicit ec: ExecutionContext): Future[ProductShort] = {
+    cache.cached(namespace  = "prod-short", expiration = 10.minutes)(id)(findShortNonCached)
   }
 
   def updateCache(
