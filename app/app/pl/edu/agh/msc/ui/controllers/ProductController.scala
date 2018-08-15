@@ -1,9 +1,9 @@
 package pl.edu.agh.msc.ui.controllers
 
-import java.time.LocalDateTime
-
 import javax.inject.Inject
 import cats.syntax.option._
+import cats.syntax.apply._
+import cats.instances.future._
 import pl.edu.agh.msc.pricing.Money
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.products.{ Filtering, Pagination, ProductId, ProductService }
@@ -62,11 +62,11 @@ class ProductController @Inject() (
   }
 
   def details(id: ProductId) = UserAware { implicit request =>
-    for {
-      product <- productService.findDetailed(id)
-      recommedations <- recommendationService.forProduct(id, max = 4)
-    } yield {
-      Ok(views.html.productDetails(product, recommedations))
+    (
+      productService.findDetailed(id),
+      recommendationService.forProduct(id, max = 4)
+    ).mapN { (product, recommendations) =>
+      Ok(views.html.productDetails(product, recommendations))
     }
   }
 

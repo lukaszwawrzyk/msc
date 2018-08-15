@@ -3,12 +3,12 @@ package pl.edu.agh.msc.products
 import javax.inject.{ Inject, Singleton }
 import cats.data.OptionT
 import cats.instances.future._
+import cats.syntax.apply._
 import pl.edu.agh.msc.availability.AvailabilityService
 import pl.edu.agh.msc.pricing.{ Money, PricingService }
 import pl.edu.agh.msc.products.Filtering.PriceRange
 import pl.edu.agh.msc.review.{ Rating, ReviewService }
-import pl.edu.agh.msc.utils.{ Cache, KeyFormat }
-
+import pl.edu.agh.msc.utils.Cache
 import scala.concurrent.duration._
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.reflect.ClassTag
@@ -47,27 +47,27 @@ case class Paginated[A](pagination: Pagination, totalPages: Int, data: Seq[A]) {
     id: ProductId
   )(implicit ec: ExecutionContext): Future[ProductDetails] = {
     def cached[A: ClassTag](namespace: String, get: ProductId => Future[A]): Future[A] = cache.cached(namespace, expiration = 10.minutes)(id)(get)
-    for {
-      product <- cached("prod-repo", productRepository.find)
-      rating <- cached("avg-rate", reviewService.averageRating)
-      reviews <- cached("reviews", reviewService.find)
-      price <- cached("price", pricingService.find)
-      availability <- cached("availability", availabilityService.find)
-    } yield {
-      val photo = product.photo.map { p =>
-        p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
+    (
+      cached("prod-repo", productRepository.find),
+      cached("avg-rate", reviewService.averageRating),
+      cached("reviews", reviewService.find),
+      cached("price", pricingService.find),
+      cached("availability", availabilityService.find)
+    ).mapN { (product, rating, reviews, price, availability) =>
+        val photo = product.photo.map { p =>
+          p.toString.replaceFirst("(\\.[A-Za-z]+)$", "_full$1")
+        }
+        ProductDetails(
+          product.name,
+          price.getOrElse(product.cachedPrice),
+          photo,
+          product.description,
+          rating.orElse(product.cachedAverageRating),
+          reviews,
+          availability,
+          id
+        )
       }
-      ProductDetails(
-        product.name,
-        price.getOrElse(product.cachedPrice),
-        photo,
-        product.description,
-        rating.orElse(product.cachedAverageRating),
-        reviews,
-        availability,
-        id
-      )
-    }
   }
 
   def findShort(
